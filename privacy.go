@@ -62,3 +62,52 @@ func (s *PrivacyService) ClearMasking(ctx context.Context, channel int) error {
 		"channel": {fmt.Sprintf("%d", channel)},
 	})
 }
+
+// SetConfig updates PrivacyMasking configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *PrivacyService) SetConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetMasking sets a privacy masking region for the given channel.
+// CGI: PrivacyMasking.cgi?action=setPrivacyMasking&channel=N&PrivacyMasking.Index=X&...
+func (s *PrivacyService) SetMasking(ctx context.Context, channel int, params map[string]string) error {
+	vals := url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	}
+	for k, v := range params {
+		vals.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "PrivacyMasking.cgi", "setPrivacyMasking", vals)
+}
+
+// GotoMasking navigates to a specific privacy masking region.
+// CGI: PrivacyMasking.cgi?action=gotoPrivacyMasking&channel=N&index=I
+func (s *PrivacyService) GotoMasking(ctx context.Context, channel, index int) error {
+	return s.client.cgiAction(ctx, "PrivacyMasking.cgi", "gotoPrivacyMasking", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"index":   {fmt.Sprintf("%d", index)},
+	})
+}
+
+// DeleteMasking deletes a specific privacy masking region.
+// CGI: PrivacyMasking.cgi?action=deletePrivacyMasking&channel=N&index=I
+func (s *PrivacyService) DeleteMasking(ctx context.Context, channel, index int) error {
+	return s.client.cgiAction(ctx, "PrivacyMasking.cgi", "deletePrivacyMasking", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"index":   {fmt.Sprintf("%d", index)},
+	})
+}
+
+// GetRealRect returns the real rectangle coordinates for a privacy masking region.
+// CGI: PrivacyMasking.cgi?action=getRealRect&channel=N&index=I
+func (s *PrivacyService) GetRealRect(ctx context.Context, channel, index int) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "PrivacyMasking.cgi", "getRealRect", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"index":   {fmt.Sprintf("%d", index)},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("privacy GetRealRect: %w", err)
+	}
+	return parseKV(body), nil
+}

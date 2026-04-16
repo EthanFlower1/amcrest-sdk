@@ -83,3 +83,107 @@ func (s *CameraService) GetLightingConfig(ctx context.Context) (map[string]strin
 func (s *CameraService) GetVideoInOptions(ctx context.Context) (map[string]string, error) {
 	return s.client.getRawConfig(ctx, "VideoInOptions")
 }
+
+// GetSharpnessConfig returns the VideoInSharpness configuration as a raw key-value map.
+// CGI: configManager.cgi?action=getConfig&name=VideoInSharpness
+func (s *CameraService) GetSharpnessConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "VideoInSharpness")
+}
+
+// SetSharpnessConfig updates VideoInSharpness configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetSharpnessConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetFlipConfig returns the VideoImageControl configuration as a raw key-value map.
+// CGI: configManager.cgi?action=getConfig&name=VideoImageControl
+func (s *CameraService) GetFlipConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "VideoImageControl")
+}
+
+// SetFlipConfig updates VideoImageControl configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetFlipConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetExposureConfig updates VideoInExposure configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetExposureConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetBacklightConfig updates VideoInBacklight configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetBacklightConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetWhiteBalanceConfig updates VideoInWhiteBalance configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetWhiteBalanceConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetDayNightConfig updates VideoInDayNight configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetDayNightConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// AdjustFocus adjusts focus and zoom for the specified channel.
+// CGI: devVideoInput.cgi?action=adjustFocus&channel=N&focus=F&zoom=Z
+func (s *CameraService) AdjustFocus(ctx context.Context, channel int, focus, zoom int) error {
+	return s.client.cgiAction(ctx, "devVideoInput.cgi", "adjustFocus", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"focus":   {fmt.Sprintf("%d", focus)},
+		"zoom":    {fmt.Sprintf("%d", zoom)},
+	})
+}
+
+// AdjustFocusContinuously adjusts focus and zoom continuously for the specified channel.
+// CGI: devVideoInput.cgi?action=adjustFocusContinuously&channel=N&focus=F&zoom=Z
+func (s *CameraService) AdjustFocusContinuously(ctx context.Context, channel int, focus, zoom int) error {
+	return s.client.cgiAction(ctx, "devVideoInput.cgi", "adjustFocusContinuously", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"focus":   {fmt.Sprintf("%d", focus)},
+		"zoom":    {fmt.Sprintf("%d", zoom)},
+	})
+}
+
+// GetZoomConfig returns the VideoInZoom configuration as a raw key-value map.
+// CGI: configManager.cgi?action=getConfig&name=VideoInZoom
+func (s *CameraService) GetZoomConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "VideoInZoom")
+}
+
+// SetZoomConfig updates VideoInZoom configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetZoomConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetFocusConfig returns the VideoInFocus configuration as a raw key-value map.
+// CGI: configManager.cgi?action=getConfig&name=VideoInFocus
+func (s *CameraService) GetFocusConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "VideoInFocus")
+}
+
+// SetFocusConfig updates VideoInFocus configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetFocusConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetLightingConfig updates Lighting configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetLightingConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetVideoInOptions updates VideoInOptions configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *CameraService) SetVideoInOptions(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}

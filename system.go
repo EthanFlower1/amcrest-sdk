@@ -2,7 +2,10 @@ package amcrest
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 // SystemService handles system-related API calls.
@@ -175,4 +178,145 @@ func (s *SystemService) GetHTTPAPIVersion(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return parseKV(body)["version"], nil
+}
+
+// SetGeneralConfig sets General configuration values. Keys should be
+// prefixed with "General." (e.g., "General.MachineName").
+func (s *SystemService) SetGeneralConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetLocalesConfig returns the Locales configuration table with the
+// "table.Locales." prefix stripped from keys.
+func (s *SystemService) GetLocalesConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getConfig(ctx, "Locales")
+}
+
+// SetLocalesConfig sets Locales configuration values. Keys should be
+// prefixed with "Locales." (e.g., "Locales.DSTEnable").
+func (s *SystemService) SetLocalesConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetHolidayConfig returns the Holiday configuration table without stripping
+// any prefix, since Holiday entries use an indexed format.
+func (s *SystemService) GetHolidayConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "Holiday")
+}
+
+// SetHolidayConfig sets Holiday configuration values.
+func (s *SystemService) SetHolidayConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetLanguage returns the current UI language setting (e.g., "English").
+func (s *SystemService) GetLanguage(ctx context.Context) (string, error) {
+	cfg, err := s.client.getConfig(ctx, "Language")
+	if err != nil {
+		return "", err
+	}
+	return cfg["CurrentLanguage"], nil
+}
+
+// SetLanguage sets the current UI language (e.g., "English", "SimpChinese").
+func (s *SystemService) SetLanguage(ctx context.Context, lang string) error {
+	return s.client.setConfig(ctx, map[string]string{
+		"Language.CurrentLanguage": lang,
+	})
+}
+
+// GetSystemInfo returns system information (e.g., serialNumber, hardwareVersion).
+// CGI: magicBox.cgi?action=getSystemInfo
+func (s *SystemService) GetSystemInfo(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "magicBox.cgi", "getSystemInfo", nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetSystemInfoNew returns extended system information.
+// CGI: magicBox.cgi?action=getSystemInfoNew
+func (s *SystemService) GetSystemInfoNew(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "magicBox.cgi", "getSystemInfoNew", nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetTracingCode returns the device tracing code.
+// CGI: magicBox.cgi?action=getTracingCode
+func (s *SystemService) GetTracingCode(ctx context.Context) (string, error) {
+	body, err := s.client.cgiGet(ctx, "magicBox.cgi", "getTracingCode", nil)
+	if err != nil {
+		return "", err
+	}
+	return parseKV(body)["tc"], nil
+}
+
+// GetCompleteMachineVersion returns the complete machine version string.
+// POST /cgi-bin/api/MagicBox/getCompleteMachineVersion
+func (s *SystemService) GetCompleteMachineVersion(ctx context.Context) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/MagicBox/getCompleteMachineVersion", nil)
+}
+
+// TCPTest tests TCP connectivity to the given IP and port.
+// POST /cgi-bin/api/tcpConnect/tcpTest with JSON {Ip, Port}.
+// Returns true if the connection succeeds.
+func (s *SystemService) TCPTest(ctx context.Context, ip string, port int) (bool, error) {
+	reqBody := struct {
+		Ip   string `json:"Ip"`
+		Port int    `json:"Port"`
+	}{Ip: ip, Port: port}
+
+	raw, err := s.client.postRaw(ctx, "/cgi-bin/api/tcpConnect/tcpTest", reqBody)
+	if err != nil {
+		return false, err
+	}
+
+	// Response contains "Connect" boolean field
+	var result struct {
+		Connect bool `json:"Connect"`
+	}
+	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &result); err != nil {
+		// Fallback: parse as key-value
+		kv := parseKV(raw)
+		return kv["Connect"] == "true", nil
+	}
+	return result.Connect, nil
+}
+
+// GetRecordingStateAll returns the recording state for all channels.
+// POST /cgi-bin/api/recordManager/getStateAll
+func (s *SystemService) GetRecordingStateAll(ctx context.Context) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/recordManager/getStateAll", nil)
+}
+
+// AddCamera adds a camera (or cameras) by group.
+// POST /cgi-bin/LogicDeviceManager.cgi?action=addCameraByGroup
+// The body should be the request payload as defined by the API.
+func (s *SystemService) AddCamera(ctx context.Context, body interface{}) (string, error) {
+	params := url.Values{"action": {"addCameraByGroup"}}
+	path := "/cgi-bin/LogicDeviceManager.cgi?" + params.Encode()
+	return s.client.postRaw(ctx, path, body)
+}
+
+// GetCameraAll returns all camera information.
+// POST /cgi-bin/api/LogicDeviceManager/getCameraAll
+func (s *SystemService) GetCameraAll(ctx context.Context) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/LogicDeviceManager/getCameraAll", nil)
+}
+
+// GetCameraState returns the connection state for the given channels.
+// POST /cgi-bin/api/LogicDeviceManager/getCameraState with JSON {channel: [...]}.
+func (s *SystemService) GetCameraState(ctx context.Context, channels []int) (string, error) {
+	strs := make([]string, len(channels))
+	for i, ch := range channels {
+		strs[i] = strconv.Itoa(ch)
+	}
+	reqBody := struct {
+		Channel []string `json:"channel"`
+	}{Channel: strs}
+	return s.client.postRaw(ctx, "/cgi-bin/api/LogicDeviceManager/getCameraState", reqBody)
 }

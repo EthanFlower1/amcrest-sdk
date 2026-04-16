@@ -2,6 +2,8 @@ package amcrest
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net/url"
 )
 
@@ -77,4 +79,61 @@ func (s *UserService) ModifyPassword(ctx context.Context, name, oldPwd, newPwd s
 		"pwd":    {newPwd},
 		"pwdOld": {oldPwd},
 	})
+}
+
+// ModifyUser modifies attributes of an existing user. The params map should
+// contain user fields such as "user.Memo", "user.Group", etc.
+// CGI: userManager.cgi?action=modifyUser&name=X&user.Memo=Y&...
+func (s *UserService) ModifyUser(ctx context.Context, name string, params map[string]string) error {
+	qv := url.Values{
+		"name": {name},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "userManager.cgi", "modifyUser", qv)
+}
+
+// ModifyPasswordByManager changes a user's password using manager credentials.
+// CGI: userManager.cgi?action=modifyPasswordByManager&name=X&pwd=Y&managerName=M&managerPwd=P
+func (s *UserService) ModifyPasswordByManager(ctx context.Context, managerName, managerPwd, userName, newPwd string) error {
+	return s.client.cgiAction(ctx, "userManager.cgi", "modifyPasswordByManager", url.Values{
+		"name":       {userName},
+		"pwd":        {newPwd},
+		"managerName": {managerName},
+		"managerPwd":  {managerPwd},
+	})
+}
+
+// SetLoginAuthPolicy sets the login authentication policy.
+// Policy values: 0 = off, 1 = on, etc. as defined by the device.
+func (s *UserService) SetLoginAuthPolicy(ctx context.Context, policy int) error {
+	return s.client.setConfig(ctx, map[string]string{
+		"LoginAuthCtrl.PriSvrPolicy": fmt.Sprintf("%d", policy),
+	})
+}
+
+// ExportAccounts exports user account data as binary. FileType specifies the
+// export format (e.g., 0 for default).
+// POST /cgi-bin/api/userManager/accountFileExport with JSON {FileType: N}.
+func (s *UserService) ExportAccounts(ctx context.Context, fileType int) ([]byte, error) {
+	reqBody := struct {
+		FileType int `json:"FileType"`
+	}{FileType: fileType}
+
+	resp, err := s.client.postRawResponse(ctx, "/cgi-bin/api/userManager/accountFileExport", reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: export accounts: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{StatusCode: resp.StatusCode}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: reading export body: %w", err)
+	}
+	return data, nil
 }

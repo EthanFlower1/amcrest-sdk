@@ -139,6 +139,63 @@ func (s *LogService) Clear(ctx context.Context) error {
 	return s.client.cgiAction(ctx, "log.cgi", "clear", nil)
 }
 
+// SeekFind retrieves log entries by seeking to a specific offset within a
+// search token obtained from Find's startFind step. This is useful for
+// paginated access to log results.
+// CGI: Log.cgi?action=doSeekFind&token=T&offset=O&count=C
+func (s *LogService) SeekFind(ctx context.Context, token, offset, count int) ([]LogEntry, error) {
+	body, err := s.client.cgiGet(ctx, "Log.cgi", "doSeekFind", url.Values{
+		"token":  {strconv.Itoa(token)},
+		"offset": {strconv.Itoa(offset)},
+		"count":  {strconv.Itoa(count)},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("log doSeekFind: %w", err)
+	}
+	return parseLogEntries(body), nil
+}
+
+// ExportEncrypted exports an encrypted log archive (ZIP) for the given time
+// range, protected by the supplied password. Times should be in
+// "YYYY-MM-DD HH:MM:SS" format.
+// CGI: GET /cgi-bin/Log.exportEncrypedLog?action=All&condition.StartTime=X&condition.EndTime=Y&password=P
+func (s *LogService) ExportEncrypted(ctx context.Context, startTime, endTime, password string) ([]byte, error) {
+	params := url.Values{
+		"action":              {"All"},
+		"condition.StartTime": {startTime},
+		"condition.EndTime":   {endTime},
+		"password":            {password},
+	}
+
+	resp, err := s.client.get(ctx, "/cgi-bin/Log.exportEncrypedLog", params)
+	if err != nil {
+		return nil, fmt.Errorf("log exportEncrypted: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{StatusCode: resp.StatusCode}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("log exportEncrypted: reading body: %w", err)
+	}
+	return data, nil
+}
+
+// GetDebugInfoRedirConfig returns the DebugInfoRedir configuration table with
+// the "table.DebugInfoRedir." prefix stripped from keys.
+func (s *LogService) GetDebugInfoRedirConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getConfig(ctx, "DebugInfoRedir")
+}
+
+// SetDebugInfoRedirConfig sets DebugInfoRedir configuration values. Keys should
+// be prefixed with "DebugInfoRedir." (e.g., "DebugInfoRedir.Enable").
+func (s *LogService) SetDebugInfoRedirConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
 // Backup downloads a binary log backup covering the given time range.
 // Times should be in "YYYY-MM-DD HH:MM:SS" format.
 // CGI: GET /cgi-bin/Log.backup?action=All&condition.StartTime=X&condition.EndTime=Y

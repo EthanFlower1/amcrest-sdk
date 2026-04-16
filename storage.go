@@ -79,3 +79,104 @@ func (s *StorageService) GetStorageGroupConfig(ctx context.Context) (map[string]
 func (s *StorageService) GetStorageHealthAlarm(ctx context.Context) (map[string]string, error) {
 	return s.client.getRawConfig(ctx, "StorageHealthAlarm")
 }
+
+// GetDiskRecordType returns the SupportDiskRecordType configuration as key-value pairs.
+// CGI: configManager.cgi?action=getConfig&name=SupportDiskRecordType
+func (s *StorageService) GetDiskRecordType(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "SupportDiskRecordType")
+}
+
+// SetDiskRecordType updates SupportDiskRecordType configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *StorageService) SetDiskRecordType(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetDetailedDiskInfo returns detailed device information for the given volume.
+// API: POST /api/StorageDeviceManager/getDeviceInfos
+func (s *StorageService) GetDetailedDiskInfo(ctx context.Context, volume string) (string, error) {
+	body := map[string]interface{}{
+		"volume": volume,
+	}
+	return s.client.postRaw(ctx, "/api/StorageDeviceManager/getDeviceInfos", body)
+}
+
+// SetNASConfig updates NAS configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *StorageService) SetNASConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRecordStoragePoint returns the RecordStoragePoint configuration as key-value pairs.
+// CGI: configManager.cgi?action=getConfig&name=RecordStoragePoint
+func (s *StorageService) GetRecordStoragePoint(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RecordStoragePoint")
+}
+
+// SetRecordStoragePoint updates RecordStoragePoint configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *StorageService) SetRecordStoragePoint(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetStorageGroupConfig updates StorageGroup configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *StorageService) SetStorageGroupConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// EncryptSDCard encrypts the SD card with the given password.
+// CGI: SDEncrypt.cgi?action=encrypt&deviceName=X&password=Y
+func (s *StorageService) EncryptSDCard(ctx context.Context, deviceName, password string) error {
+	return s.client.cgiAction(ctx, "SDEncrypt.cgi", "encrypt", url.Values{
+		"deviceName": {deviceName},
+		"password":   {password},
+	})
+}
+
+// DecryptSDCard decrypts the SD card with the given password.
+// CGI: SDEncrypt.cgi?action=decrypt&deviceName=X&password=Y
+func (s *StorageService) DecryptSDCard(ctx context.Context, deviceName, password string) error {
+	return s.client.cgiAction(ctx, "SDEncrypt.cgi", "decrypt", url.Values{
+		"deviceName": {deviceName},
+		"password":   {password},
+	})
+}
+
+// ClearSDCardPassword clears the encryption password for the SD card.
+// CGI: SDEncrypt.cgi?action=clearPassword&deviceName=X&password=Y
+func (s *StorageService) ClearSDCardPassword(ctx context.Context, deviceName, password string) error {
+	return s.client.cgiAction(ctx, "SDEncrypt.cgi", "clearPassword", url.Values{
+		"deviceName": {deviceName},
+		"password":   {password},
+	})
+}
+
+// ModifySDCardPassword changes the encryption password for the SD card.
+// CGI: SDEncrypt.cgi?action=modifyPassword&deviceName=X&oldPassword=Y&newPassword=Z
+func (s *StorageService) ModifySDCardPassword(ctx context.Context, deviceName, oldPassword, newPassword string) error {
+	return s.client.cgiAction(ctx, "SDEncrypt.cgi", "modifyPassword", url.Values{
+		"deviceName":  {deviceName},
+		"oldPassword": {oldPassword},
+		"newPassword": {newPassword},
+	})
+}
+
+// GetSDCardErrorPolicy returns the operate error policy for the SD card.
+// CGI: SDEncrypt.cgi?action=getOperateErrorPolicy&deviceName=X&operate=Y
+func (s *StorageService) GetSDCardErrorPolicy(ctx context.Context, deviceName, operate string) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "SDEncrypt.cgi", "getOperateErrorPolicy", url.Values{
+		"deviceName": {deviceName},
+		"operate":    {operate},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("storage GetSDCardErrorPolicy: %w", err)
+	}
+	return parseKV(body), nil
+}
+
+// SetStorageHealthAlarm updates StorageHealthAlarm configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *StorageService) SetStorageHealthAlarm(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
