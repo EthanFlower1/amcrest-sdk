@@ -230,6 +230,168 @@ func parseMediaFiles(body string) []MediaFile {
 	return files
 }
 
+// SetRecordConfig sets Record configuration values. Keys should be prefixed
+// with "Record." (e.g., "Record[0].TimeSection[0][0]").
+func (s *RecordingService) SetRecordConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetRecordMode sets RecordMode configuration values. Keys should be prefixed
+// with "RecordMode." (e.g., "RecordMode[0].Mode").
+func (s *RecordingService) SetRecordMode(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetMediaGlobal sets MediaGlobal configuration values. Keys should be prefixed
+// with "MediaGlobal." (e.g., "MediaGlobal.PacketLength").
+func (s *RecordingService) SetMediaGlobal(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// FindFilesWithFilter searches for recorded media files with additional database filter conditions.
+// The dbFilter map keys are condition.DB.* suffixes (e.g., "FaceDetectionRecordFilter.Sex" -> "Man").
+func (s *RecordingService) FindFilesWithFilter(ctx context.Context, opts FindFilesOpts, dbFilter map[string]string) ([]MediaFile, error) {
+	// Step 1: factory.create - obtain an object ID
+	body, err := s.client.cgiGet(ctx, "mediaFileFind.cgi", "factory.create", nil)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: mediaFileFind factory.create: %w", err)
+	}
+	kv := parseKV(body)
+	objectID := kv["result"]
+	if objectID == "" {
+		return nil, fmt.Errorf("amcrest: mediaFileFind factory.create returned no object ID")
+	}
+
+	// Ensure cleanup runs even on error.
+	defer func() {
+		_ = s.mediaFileFindRaw(ctx, objectID, "close", "")
+		_ = s.mediaFileFindRaw(ctx, objectID, "destroy", "")
+	}()
+
+	// Step 2: findFile - set search conditions.
+	findExtra := fmt.Sprintf(
+		"condition.Channel=%d"+
+			"&condition.StartTime=%s"+
+			"&condition.EndTime=%s",
+		opts.Channel,
+		amcrestEscape(opts.StartTime),
+		amcrestEscape(opts.EndTime),
+	)
+	if opts.Type != "" {
+		findExtra += "&condition.Types[0]=" + amcrestEscape(opts.Type)
+	}
+	// Add DB filter conditions.
+	for k, v := range dbFilter {
+		findExtra += "&condition.DB." + amcrestEscape(k) + "=" + amcrestEscape(v)
+	}
+
+	body, err = s.mediaFileFindRawBody(ctx, objectID, "findFile", findExtra)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: mediaFileFind findFile: %w", err)
+	}
+
+	// Step 3: findNextFile in a loop, fetching up to 100 at a time.
+	var files []MediaFile
+	for {
+		body, err = s.mediaFileFindRawBody(ctx, objectID, "findNextFile", "count=100")
+		if err != nil {
+			return nil, fmt.Errorf("amcrest: mediaFileFind findNextFile: %w", err)
+		}
+
+		batch := parseMediaFiles(body)
+		if len(batch) == 0 {
+			break
+		}
+		files = append(files, batch...)
+
+		kv := parseKV(body)
+		if kv["found"] == "0" {
+			break
+		}
+	}
+
+	return files, nil
+}
+
+// DownloadByTime downloads a recording by time range and returns the raw bytes.
+// CGI: loadfile.cgi?action=startLoad&channel=N&startTime=X&endTime=Y&subtype=Z
+func (s *RecordingService) DownloadByTime(ctx context.Context, channel int, startTime, endTime string, subtype int) ([]byte, error) {
+	params := url.Values{
+		"channel":   {strconv.Itoa(channel)},
+		"startTime": {startTime},
+		"endTime":   {endTime},
+		"subtype":   {strconv.Itoa(subtype)},
+	}
+
+	path := "/cgi-bin/loadfile.cgi"
+	resp, err := s.client.get(ctx, path, url.Values{
+		"action":    {"startLoad"},
+		"channel":   params["channel"],
+		"startTime": params["startTime"],
+		"endTime":   params["endTime"],
+		"subtype":   params["subtype"],
+	})
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: downloading by time: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    "failed to download by time",
+		}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: reading download body: %w", err)
+	}
+	return data, nil
+}
+
+// DownloadEncrypted downloads an encrypted recording file and returns the raw bytes.
+// CGI: RecordStreamInterleaved.cgi?action=attachStream&path=X&password=Y
+func (s *RecordingService) DownloadEncrypted(ctx context.Context, filePath, password string) ([]byte, error) {
+	params := url.Values{
+		"action":   {"attachStream"},
+		"path":     {filePath},
+		"password": {password},
+	}
+
+	resp, err := s.client.get(ctx, "/cgi-bin/RecordStreamInterleaved.cgi", params)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: downloading encrypted file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    fmt.Sprintf("failed to download encrypted %s", filePath),
+		}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: reading encrypted file body: %w", err)
+	}
+	return data, nil
+}
+
+// GetAlarmCount returns the count of alarm recordings.
+// POST: /cgi-bin/api/mediaFileFind/getCount
+func (s *RecordingService) GetAlarmCount(ctx context.Context) (int, error) {
+	var result struct {
+		Count int `json:"count"`
+	}
+	err := s.client.postJSON(ctx, "/cgi-bin/api/mediaFileFind/getCount", struct{}{}, &result)
+	if err != nil {
+		return 0, err
+	}
+	return result.Count, nil
+}
+
 // DownloadFile downloads a recorded file from the camera and returns the raw bytes.
 // The filePath should be the path returned by FindFiles (e.g., "/mnt/sd/...").
 // CGI: GET /cgi-bin/RPC_Loadfile/<filePath>

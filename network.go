@@ -107,6 +107,111 @@ func (n *NetworkService) ScanWLanDevices(ctx context.Context) (string, error) {
 	return n.client.cgiGet(ctx, "wlan.cgi", "scanWlanDevices", nil)
 }
 
+// SetAccessFilter sets AccessFilter configuration values. Keys should be prefixed
+// with "AccessFilter." (e.g., "AccessFilter.Enable", "AccessFilter.Type").
+func (n *NetworkService) SetAccessFilter(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetNetworkConfig sets Network configuration values. Keys should be prefixed
+// with "Network." (e.g., "Network.eth0.IPAddress").
+func (n *NetworkService) SetNetworkConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// GetPPPoEConfig returns the PPPoE configuration table without stripping
+// prefixes, since keys may contain interface-specific sub-tables.
+func (n *NetworkService) GetPPPoEConfig(ctx context.Context) (map[string]string, error) {
+	return n.client.getRawConfig(ctx, "PPPoE")
+}
+
+// SetPPPoEConfig sets PPPoE configuration values. Keys should be prefixed
+// with "PPPoE." (e.g., "PPPoE.Enable", "PPPoE.UserName").
+func (n *NetworkService) SetPPPoEConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetDDNSConfig sets DDNS configuration values. Keys should be prefixed
+// with "DDNS." (e.g., "DDNS.Enable", "DDNS.HostName").
+func (n *NetworkService) SetDDNSConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetWLanConfig sets WLan configuration values. Keys should be prefixed
+// with "WLan." (e.g., "WLan.eth2.Enable").
+func (n *NetworkService) SetWLanConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetUPnPConfig sets UPnP configuration values. Keys should be prefixed
+// with "UPnP." (e.g., "UPnP.Enable", "UPnP.MapTable").
+func (n *NetworkService) SetUPnPConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetRTSPConfig sets RTSP configuration values. Keys should be prefixed
+// with "RTSP." (e.g., "RTSP.Enable", "RTSP.Port").
+func (n *NetworkService) SetRTSPConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// SetAlarmServerConfig sets AlarmServer configuration values. Keys should be
+// prefixed with "AlarmServer." (e.g., "AlarmServer.Enable", "AlarmServer.Address").
+func (n *NetworkService) SetAlarmServerConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// GetOnvifAuthConfig returns the UserGlobal configuration table with the
+// "table.UserGlobal." prefix stripped from keys.
+func (n *NetworkService) GetOnvifAuthConfig(ctx context.Context) (map[string]string, error) {
+	return n.client.getConfig(ctx, "UserGlobal")
+}
+
+// SetOnvifAuthConfig enables or disables ONVIF login authentication.
+// CGI: configManager.cgi?action=setConfig&UserGlobal.OnvifLoginCheck=true/false
+func (n *NetworkService) SetOnvifAuthConfig(ctx context.Context, enable bool) error {
+	val := "false"
+	if enable {
+		val = "true"
+	}
+	return n.client.setConfig(ctx, map[string]string{
+		"UserGlobal.OnvifLoginCheck": val,
+	})
+}
+
+// SetSSHDConfig sets SSHD configuration values. Keys should be prefixed
+// with "SSHD." (e.g., "SSHD.Enable").
+func (n *NetworkService) SetSSHDConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// GetCellularFluxConfig returns the CellularFlux configuration table without
+// stripping prefixes.
+func (n *NetworkService) GetCellularFluxConfig(ctx context.Context) (map[string]string, error) {
+	return n.client.getRawConfig(ctx, "CellularFlux")
+}
+
+// SetCellularFluxConfig sets CellularFlux configuration values. Keys should be
+// prefixed with "CellularFlux." (e.g., "CellularFlux.Enable").
+func (n *NetworkService) SetCellularFluxConfig(ctx context.Context, params map[string]string) error {
+	return n.client.setConfig(ctx, params)
+}
+
+// GetCurrentMonthTraffic returns the current month's data traffic for the given card.
+// POST: /cgi-bin/api/DataFlux/getFlux
+func (n *NetworkService) GetCurrentMonthTraffic(ctx context.Context, card string) (string, error) {
+	reqBody := struct {
+		Card string `json:"card"`
+	}{Card: card}
+	return n.client.postRaw(ctx, "/cgi-bin/api/DataFlux/getFlux", reqBody)
+}
+
+// QueryHistoryTraffic queries historical data traffic.
+// POST: /cgi-bin/api/DataFlux/queryHistoryFlux
+func (n *NetworkService) QueryHistoryTraffic(ctx context.Context, params interface{}) (string, error) {
+	return n.client.postRaw(ctx, "/cgi-bin/api/DataFlux/queryHistoryFlux", params)
+}
+
 // --- Convenience helpers (not part of the required API) ---
 
 // GetNetworkConfigForInterface returns the Network configuration for a specific
