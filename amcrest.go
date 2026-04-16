@@ -203,6 +203,27 @@ func (c *Client) postJSON(ctx context.Context, path string, body interface{}, re
 	return nil
 }
 
+// postRaw performs a POST request with a JSON body and returns the raw response as a string.
+func (c *Client) postRaw(ctx context.Context, path string, body interface{}) (string, error) {
+	jsonData, err := json.Marshal(body)
+	if err != nil {
+		return "", fmt.Errorf("amcrest: marshaling JSON: %w", err)
+	}
+
+	u := c.baseURL + path
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return readBody(resp)
+}
+
 // cgiGet performs a GET to /cgi-bin/<cgi>?action=<action> with optional extra params,
 // reads the response body, and returns it as a string.
 func (c *Client) cgiGet(ctx context.Context, cgi, action string, params url.Values) (string, error) {
