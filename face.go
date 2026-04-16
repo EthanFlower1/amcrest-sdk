@@ -2,8 +2,10 @@ package amcrest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // FaceService handles face detection and recognition related API calls.
@@ -63,4 +65,201 @@ func (s *FaceService) GetGroupForChannel(ctx context.Context, channel int) (stri
 		return "", fmt.Errorf("FaceService.GetGroupForChannel: %w", err)
 	}
 	return body, nil
+}
+
+// ModifyGroup modifies the name and detail of an existing face recognition group.
+// PDF 9.2.2: faceRecognitionServer.cgi?action=modifyGroup
+func (s *FaceService) ModifyGroup(ctx context.Context, groupID, name, detail string) error {
+	params := url.Values{
+		"groupID":     {groupID},
+		"groupName":   {name},
+		"groupDetail": {detail},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "modifyGroup", params)
+}
+
+// DeployGroup deploys a face recognition group to the specified channels with
+// the given similarity threshold.
+// PDF 9.2.4: faceRecognitionServer.cgi?action=putDisposition
+func (s *FaceService) DeployGroup(ctx context.Context, groupID string, channels []int, similarity int) error {
+	params := url.Values{
+		"groupID":    {groupID},
+		"similarity": {fmt.Sprintf("%d", similarity)},
+	}
+	chStrs := make([]string, len(channels))
+	for i, ch := range channels {
+		chStrs[i] = fmt.Sprintf("%d", ch)
+	}
+	params.Set("channel", strings.Join(chStrs, ","))
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "putDisposition", params)
+}
+
+// UndeployGroup removes a face recognition group from the specified channels.
+// PDF 9.2.4: faceRecognitionServer.cgi?action=deleteDisposition
+func (s *FaceService) UndeployGroup(ctx context.Context, groupID string, channels []int) error {
+	params := url.Values{
+		"groupID": {groupID},
+	}
+	chStrs := make([]string, len(channels))
+	for i, ch := range channels {
+		chStrs[i] = fmt.Sprintf("%d", ch)
+	}
+	params.Set("channel", strings.Join(chStrs, ","))
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "deleteDisposition", params)
+}
+
+// SetGroupForChannel assigns face recognition groups with similarity thresholds
+// to a specific channel.
+// PDF 9.2.4: faceRecognitionServer.cgi?action=setGroup
+func (s *FaceService) SetGroupForChannel(ctx context.Context, channel int, groups []string, similarities []int) error {
+	params := url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	}
+	params.Set("groupID", strings.Join(groups, ","))
+	simStrs := make([]string, len(similarities))
+	for i, sim := range similarities {
+		simStrs[i] = fmt.Sprintf("%d", sim)
+	}
+	params.Set("similarity", strings.Join(simStrs, ","))
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "setGroup", params)
+}
+
+// ReAbstractByGroup re-abstracts face features for all persons in the given group.
+// PDF 9.2.6: faceRecognitionServer.cgi?action=reAbstract&groupID=X
+func (s *FaceService) ReAbstractByGroup(ctx context.Context, groupID string) error {
+	params := url.Values{
+		"groupID": {groupID},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "reAbstract", params)
+}
+
+// AddPerson adds a person to a face recognition group. The params map should
+// include keys like groupID, name, sex, birthday, etc. Returns the UID assigned.
+// PDF 9.2.7: faceRecognitionServer.cgi?action=addPerson
+func (s *FaceService) AddPerson(ctx context.Context, params map[string]string) (string, error) {
+	qv := url.Values{}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	body, err := s.client.cgiGet(ctx, "faceRecognitionServer.cgi", "addPerson", qv)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.AddPerson: %w", err)
+	}
+	kv := parseKV(body)
+	uid, ok := kv["uid"]
+	if !ok {
+		return "", fmt.Errorf("FaceService.AddPerson: uid not found in response: %s", body)
+	}
+	return uid, nil
+}
+
+// ModifyPerson modifies an existing person in a face recognition group.
+// PDF 9.2.8: faceRecognitionServer.cgi?action=modifyPerson
+func (s *FaceService) ModifyPerson(ctx context.Context, params map[string]string) error {
+	qv := url.Values{}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "modifyPerson", qv)
+}
+
+// DeletePerson deletes a person from a face recognition group.
+// PDF 9.2.9: faceRecognitionServer.cgi?action=deletePerson&groupID=X&uid=Y
+func (s *FaceService) DeletePerson(ctx context.Context, groupID, uid string) error {
+	params := url.Values{
+		"groupID": {groupID},
+		"uid":     {uid},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "deletePerson", params)
+}
+
+// StartFindPerson begins a person search and returns a search token.
+// PDF 9.2.10: faceRecognitionServer.cgi?action=startFindPerson
+func (s *FaceService) StartFindPerson(ctx context.Context, params map[string]string) (string, error) {
+	qv := url.Values{}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	body, err := s.client.cgiGet(ctx, "faceRecognitionServer.cgi", "startFindPerson", qv)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindPerson: %w", err)
+	}
+	kv := parseKV(body)
+	token, ok := kv["token"]
+	if !ok {
+		return "", fmt.Errorf("FaceService.StartFindPerson: token not found in response: %s", body)
+	}
+	return token, nil
+}
+
+// DoFindPerson retrieves a page of person search results using the given token.
+// PDF 9.2.10: faceRecognitionServer.cgi?action=doFindPerson&token=X&offset=N&count=M
+func (s *FaceService) DoFindPerson(ctx context.Context, token string, offset, count int) (string, error) {
+	params := url.Values{
+		"token":  {token},
+		"offset": {fmt.Sprintf("%d", offset)},
+		"count":  {fmt.Sprintf("%d", count)},
+	}
+	body, err := s.client.cgiGet(ctx, "faceRecognitionServer.cgi", "doFindPerson", params)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.DoFindPerson: %w", err)
+	}
+	return body, nil
+}
+
+// StopFindPerson stops a person search and releases the token.
+// PDF 9.2.10: faceRecognitionServer.cgi?action=stopFindPerson&token=X
+func (s *FaceService) StopFindPerson(ctx context.Context, token string) error {
+	params := url.Values{
+		"token": {token},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "stopFindPerson", params)
+}
+
+// GetFaceRecAlarmConfig returns the face recognition alarm configuration.
+// PDF 9.2.12: getRawConfig FaceRecognitionAlarm
+func (s *FaceService) GetFaceRecAlarmConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "FaceRecognitionAlarm")
+}
+
+// SetFaceRecAlarmConfig updates the face recognition alarm configuration.
+// PDF 9.2.12
+func (s *FaceService) SetFaceRecAlarmConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// StartFindByPic starts a face search using a picture. This method requires
+// multipart form-data upload and is not yet fully implemented.
+// PDF 9.2.13
+func (s *FaceService) StartFindByPic(ctx context.Context, channel int, picData []byte, params map[string]string) (string, error) {
+	return "", errors.New("FaceService.StartFindByPic: not implemented")
+}
+
+// GetFaceRecEventHandler returns the face recognition event handler configuration.
+// PDF 9.2.18: getRawConfig FaceRecognitionEventHandler
+func (s *FaceService) GetFaceRecEventHandler(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "FaceRecognitionEventHandler")
+}
+
+// SetFaceRecEventHandler updates the face recognition event handler configuration.
+// PDF 9.2.18
+func (s *FaceService) SetFaceRecEventHandler(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// ExportFaceDB exports the face database for the given group as binary data.
+// PDF 9.2.20: POST /cgi-bin/api/FaceLibImExport/export
+func (s *FaceService) ExportFaceDB(ctx context.Context, groupID string) ([]byte, error) {
+	reqBody := map[string]string{"groupID": groupID}
+	body, err := s.client.postRaw(ctx, "/cgi-bin/api/FaceLibImExport/export", reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("FaceService.ExportFaceDB: %w", err)
+	}
+	return []byte(body), nil
+}
+
+// ImportFaceDB imports a face database binary.
+// PDF 9.2.21: POST /cgi-bin/api/FaceLibImExport/import
+func (s *FaceService) ImportFaceDB(ctx context.Context, data []byte) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/FaceLibImExport/import", data, nil)
 }

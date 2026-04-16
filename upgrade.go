@@ -1,8 +1,11 @@
 package amcrest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"mime/multipart"
+	"net/http"
 	"net/url"
 )
 
@@ -58,4 +61,58 @@ func (s *UpgradeService) GetCloudUpgradeMode(ctx context.Context) (map[string]st
 // SetCloudUpgradeMode updates the cloud upgrade mode.
 func (s *UpgradeService) SetCloudUpgradeMode(ctx context.Context, params url.Values) error {
 	return s.client.cgiAction(ctx, "configManager.cgi", "setConfig", params)
+}
+
+// UploadFirmware uploads a firmware binary to the camera as multipart/form-data.
+// PDF 4.12.1: POST /cgi-bin/upgrader.cgi?action=uploadFirmware
+func (s *UpgradeService) UploadFirmware(ctx context.Context, firmware []byte, filename string) error {
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("firmware", filename)
+	if err != nil {
+		return fmt.Errorf("UpgradeService.UploadFirmware: creating form file: %w", err)
+	}
+	if _, err := part.Write(firmware); err != nil {
+		return fmt.Errorf("UpgradeService.UploadFirmware: writing firmware: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("UpgradeService.UploadFirmware: closing multipart writer: %w", err)
+	}
+
+	u := s.client.baseURL + "/cgi-bin/upgrader.cgi?action=uploadFirmware"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, &buf)
+	if err != nil {
+		return fmt.Errorf("UpgradeService.UploadFirmware: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("UpgradeService.UploadFirmware: executing request: %w", err)
+	}
+	return checkOK(resp)
+}
+
+// UpdateByURL instructs the camera to download and apply firmware from a URL.
+// PDF 4.12.3: upgrader.cgi?action=updateFirmwareByUrl&Url=X&checkType=0&checkSum=Y
+func (s *UpgradeService) UpdateByURL(ctx context.Context, firmwareURL, checkSum string) error {
+	params := url.Values{
+		"Url":       {firmwareURL},
+		"checkType": {"0"},
+		"checkSum":  {checkSum},
+	}
+	return s.client.cgiAction(ctx, "upgrader.cgi", "updateFirmwareByUrl", params)
+}
+
+// ExecuteCloudUpdate executes a cloud firmware update with the given way parameter.
+// PDF 4.12.6: POST /cgi-bin/api/CloudUpgrader/execute with JSON {"way": N}.
+func (s *UpgradeService) ExecuteCloudUpdate(ctx context.Context, way int) error {
+	reqBody := map[string]int{"way": way}
+	return s.client.postJSON(ctx, "/cgi-bin/api/CloudUpgrader/execute", reqBody, nil)
+}
+
+// CancelCloudUpdate cancels a cloud firmware update in progress.
+// PDF 4.12.7: POST /cgi-bin/api/CloudUpgrader/cancel.
+func (s *UpgradeService) CancelCloudUpdate(ctx context.Context) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/CloudUpgrader/cancel", struct{}{}, nil)
 }
