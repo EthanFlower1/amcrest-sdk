@@ -1,9 +1,11 @@
 package amcrest
 
 import (
+	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -228,11 +230,165 @@ func (s *FaceService) SetFaceRecAlarmConfig(ctx context.Context, params map[stri
 	return s.client.setConfig(ctx, params)
 }
 
-// StartFindByPic starts a face search using a picture. This method requires
-// multipart form-data upload and is not yet fully implemented.
-// PDF 9.2.13
-func (s *FaceService) StartFindByPic(ctx context.Context, channel int, picData []byte, params map[string]string) (string, error) {
-	return "", errors.New("FaceService.StartFindByPic: not implemented")
+// StartFindByPic starts a face search using a picture. The picture data is
+// POSTed as image/jpeg to the CGI with search parameters in the query string.
+// Returns the raw multipart/JSON response body which contains token, progress,
+// and totalCount fields.
+// PDF 9.2.13: faceRecognitionServer.cgi?action=startFindByPic
+func (s *FaceService) StartFindByPic(ctx context.Context, picData []byte, groupIDs []string, similarity int, maxCandidate int) (string, error) {
+	qv := url.Values{
+		"action":     {"startFindByPic"},
+		"Similarity": {fmt.Sprintf("%d", similarity)},
+	}
+	for i, gid := range groupIDs {
+		qv.Set(fmt.Sprintf("GroupID[%d]", i), gid)
+	}
+	if maxCandidate > 0 {
+		qv.Set("MaxCandidate", fmt.Sprintf("%d", maxCandidate))
+	}
+
+	u := s.client.baseURL + "/cgi-bin/faceRecognitionServer.cgi?" + qv.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(picData))
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindByPic: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "image/jpeg")
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindByPic: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return "", &APIError{StatusCode: resp.StatusCode, Message: "startFindByPic failed"}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindByPic: reading body: %w", err)
+	}
+	return string(data), nil
+}
+
+// DoFindByPic retrieves a page of face-by-picture search results.
+// The response is multipart; the first part is JSON with Found and Candidates,
+// followed by JPEG image parts. Returned as raw string.
+// PDF 9.2.13: faceRecognitionServer.cgi?action=doFindByPic
+func (s *FaceService) DoFindByPic(ctx context.Context, token string, index, count int) (string, error) {
+	params := url.Values{
+		"token": {token},
+		"index": {fmt.Sprintf("%d", index)},
+		"count": {fmt.Sprintf("%d", count)},
+	}
+	body, err := s.client.cgiGet(ctx, "faceRecognitionServer.cgi", "doFindByPic", params)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.DoFindByPic: %w", err)
+	}
+	return body, nil
+}
+
+// StopFindByPic stops a face-by-picture search session.
+// PDF 9.2.13: faceRecognitionServer.cgi?action=stopFindByPic
+func (s *FaceService) StopFindByPic(ctx context.Context, token string) error {
+	params := url.Values{
+		"token": {token},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "stopFindByPic", params)
+}
+
+// StartFindHistoryByPic starts a history face search using a picture. The
+// picture data is POSTed as image/jpeg with search parameters in the query
+// string. Returns the raw response body containing token, progress, and
+// totalCount.
+// PDF 9.2.14: faceRecognitionServer.cgi?action=startFindHistoryByPic
+func (s *FaceService) StartFindHistoryByPic(ctx context.Context, picData []byte, params map[string]string) (string, error) {
+	qv := url.Values{
+		"action": {"startFindHistoryByPic"},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+
+	u := s.client.baseURL + "/cgi-bin/faceRecognitionServer.cgi?" + qv.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(picData))
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindHistoryByPic: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "image/jpeg")
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindHistoryByPic: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return "", &APIError{StatusCode: resp.StatusCode, Message: "startFindHistoryByPic failed"}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.StartFindHistoryByPic: reading body: %w", err)
+	}
+	return string(data), nil
+}
+
+// DoFindHistoryByPic retrieves a page of history face-by-picture search results.
+// PDF 9.2.14: faceRecognitionServer.cgi?action=doFindHistoryByPic
+func (s *FaceService) DoFindHistoryByPic(ctx context.Context, token string, index, count int) (string, error) {
+	params := url.Values{
+		"token": {token},
+		"index": {fmt.Sprintf("%d", index)},
+		"count": {fmt.Sprintf("%d", count)},
+	}
+	body, err := s.client.cgiGet(ctx, "faceRecognitionServer.cgi", "doFindHistoryByPic", params)
+	if err != nil {
+		return "", fmt.Errorf("FaceService.DoFindHistoryByPic: %w", err)
+	}
+	return body, nil
+}
+
+// StopFindHistoryByPic stops a history face-by-picture search session.
+// PDF 9.2.14: faceRecognitionServer.cgi?action=stopFindHistoryByPic
+func (s *FaceService) StopFindHistoryByPic(ctx context.Context, token string) error {
+	params := url.Values{
+		"token": {token},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "stopFindHistoryByPic", params)
+}
+
+// StopReAbstractByGroup stops a group re-abstract operation by its token.
+// PDF 9.2.6: faceRecognitionServer.cgi?action=stopGroupReAbstract
+func (s *FaceService) StopReAbstractByGroup(ctx context.Context, token string) error {
+	params := url.Values{
+		"token": {token},
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "stopGroupReAbstract", params)
+}
+
+// ReAbstractByPerson re-abstracts face features for specific persons by UID.
+// PDF 9.2.11: faceRecognitionServer.cgi?action=reAbstract&uid[0]=X&uid[1]=Y
+func (s *FaceService) ReAbstractByPerson(ctx context.Context, uids []string) error {
+	params := url.Values{}
+	for i, uid := range uids {
+		params.Set(fmt.Sprintf("uid[%d]", i), uid)
+	}
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "reAbstract", params)
+}
+
+// StopReAbstractByPerson stops a person-level re-abstract operation.
+// PDF 9.2.11: faceRecognitionServer.cgi?action=stopReAbstract
+func (s *FaceService) StopReAbstractByPerson(ctx context.Context) error {
+	return s.client.cgiAction(ctx, "faceRecognitionServer.cgi", "stopReAbstract", nil)
+}
+
+// SetFaceIDThreshold sets the Face-ID recognition comparison threshold.
+// PDF 9.2.19: configManager setConfig CitizenPictureCompareRule.Threshold=N
+func (s *FaceService) SetFaceIDThreshold(ctx context.Context, threshold int) error {
+	return s.client.setConfig(ctx, map[string]string{
+		"CitizenPictureCompareRule.Threshold": fmt.Sprintf("%d", threshold),
+	})
 }
 
 // GetFaceRecEventHandler returns the face recognition event handler configuration.

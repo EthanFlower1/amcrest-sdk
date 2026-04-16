@@ -1,8 +1,10 @@
 package amcrest
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -319,4 +321,83 @@ func (s *SystemService) GetCameraState(ctx context.Context, channels []int) (str
 		Channel []string `json:"channel"`
 	}{Channel: strs}
 	return s.client.postRaw(ctx, "/cgi-bin/api/LogicDeviceManager/getCameraState", reqBody)
+}
+
+// SubscribeCameraState opens a long-lived multipart stream that delivers
+// camera online/offline state change events for the given channels.
+// Pass -1 in channels to observe all channels. The heartbeat parameter
+// controls keep-alive interval in seconds (range [1,60], default 60).
+// POST /cgi-bin/api/LogicDeviceManager/attachCameraState
+func (s *SystemService) SubscribeCameraState(ctx context.Context, channels []int, heartbeat int) (<-chan Event, *EventStream, error) {
+	reqBody := struct {
+		Channel   []int `json:"channel"`
+		Heartbeat int   `json:"heartbeat,omitempty"`
+	}{Channel: channels}
+	if heartbeat > 0 {
+		reqBody.Heartbeat = heartbeat
+	}
+
+	resp, err := s.client.postRawResponse(ctx, "/cgi-bin/api/LogicDeviceManager/attachCameraState", reqBody)
+	if err != nil {
+		return nil, nil, fmt.Errorf("amcrest: subscribing to camera state: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		resp.Body.Close()
+		return nil, nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    "failed to subscribe to camera state",
+		}
+	}
+
+	es := &EventStream{
+		resp:    resp,
+		scanner: bufio.NewScanner(resp.Body),
+	}
+
+	ch := make(chan Event, 16)
+	go func() {
+		defer close(ch)
+		var block []string
+		inBlock := false
+
+		for es.scanner.Scan() {
+			line := es.scanner.Text()
+
+			if strings.HasPrefix(line, "--") && !inBlock {
+				inBlock = true
+				block = nil
+				continue
+			}
+
+			if inBlock {
+				if strings.HasPrefix(line, "--") {
+					evt := parseEventBlock(block)
+					if evt != nil {
+						select {
+						case ch <- *evt:
+						case <-ctx.Done():
+							return
+						}
+					}
+					block = nil
+					continue
+				}
+				block = append(block, line)
+			}
+		}
+
+		if len(block) > 0 {
+			evt := parseEventBlock(block)
+			if evt != nil {
+				select {
+				case ch <- *evt:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}()
+
+	return ch, es, nil
 }

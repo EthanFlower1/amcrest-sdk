@@ -248,6 +248,16 @@ func (s *RecordingService) SetMediaGlobal(ctx context.Context, params map[string
 	return s.client.setConfig(ctx, params)
 }
 
+// GetRecordStateAll returns the recording status of all channels.
+// POST: /cgi-bin/api/recordManager/getStateAll
+func (s *RecordingService) GetRecordStateAll(ctx context.Context) (string, error) {
+	body, err := s.client.postRaw(ctx, "/cgi-bin/api/recordManager/getStateAll", struct{}{})
+	if err != nil {
+		return "", fmt.Errorf("RecordingService.GetRecordStateAll: %w", err)
+	}
+	return body, nil
+}
+
 // FindFilesWithFilter searches for recorded media files with additional database filter conditions.
 // The dbFilter map keys are condition.DB.* suffixes (e.g., "FaceDetectionRecordFilter.Sex" -> "Man").
 func (s *RecordingService) FindFilesWithFilter(ctx context.Context, opts FindFilesOpts, dbFilter map[string]string) ([]MediaFile, error) {

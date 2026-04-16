@@ -121,3 +121,69 @@ func (s *AudioService) GetAudioAnalyseClassConfig(ctx context.Context, className
 	}{ClassName: className, AudioChannel: channel}
 	return s.client.postRaw(ctx, "/cgi-bin/api/AudioAnalyseManager/getClassConfig", reqBody)
 }
+
+// GetInputCaps returns the capabilities of the given audio input channel.
+// CGI: devAudioInput.cgi?action=getCaps&channel=N
+func (s *AudioService) GetInputCaps(ctx context.Context, channel int) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "devAudioInput.cgi", "getCaps", url.Values{
+		"channel": {strconv.Itoa(channel)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetOutputCaps returns the capabilities of the given audio output channel.
+// CGI: devAudioOutput.cgi?action=getCaps&channel=N
+func (s *AudioService) GetOutputCaps(ctx context.Context, channel int) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "devAudioOutput.cgi", "getCaps", url.Values{
+		"channel": {strconv.Itoa(channel)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetInputConfig returns the AudioInput configuration table.
+// CGI: configManager.cgi?action=getConfig&name=AudioInput
+func (s *AudioService) GetInputConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "AudioInput")
+}
+
+// SetInputConfig sets AudioInput configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *AudioService) SetInputConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetOutputConfig returns the AudioOutput configuration table.
+// CGI: configManager.cgi?action=getConfig&name=AudioOutput
+func (s *AudioService) GetOutputConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "AudioOutput")
+}
+
+// SetOutputConfig sets AudioOutput configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *AudioService) SetOutputConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetEncodeCapability returns the AudioEncodeCapability configuration table.
+// CGI: configManager.cgi?action=getConfig&name=AudioEncodeCapability
+func (s *AudioService) GetEncodeCapability(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "AudioEncodeCapability")
+}
+
+// SetAudioAnalyseClassConfig sets the audio analysis class configuration.
+// POST: /cgi-bin/api/AudioAnalyseManager/setClassConfig
+func (s *AudioService) SetAudioAnalyseClassConfig(ctx context.Context, body interface{}) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/AudioAnalyseManager/setClassConfig", body, nil)
+}
+
+// GetAudioAnalyseCaps returns the audio analysis capabilities.
+// POST: /cgi-bin/api/AudioAnalyseManager/getCaps
+func (s *AudioService) GetAudioAnalyseCaps(ctx context.Context) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AudioAnalyseManager/getCaps", struct{}{})
+}

@@ -320,3 +320,42 @@ func (s *PTZService) SetEPTZConfig(ctx context.Context, params map[string]string
 	return s.client.setConfig(ctx, params)
 }
 
+// SetTour creates or configures a tour with the given presets. It first
+// creates the tour group via setTour, then adds each preset via AddTour.
+// CGI: ptz.cgi?action=setTour&channel=N&arg1=TourID&arg2=TourName
+// followed by ptz.cgi?action=start&code=AddTour for each preset.
+func (s *PTZService) SetTour(ctx context.Context, channel, tourID int, presets []int) error {
+	// Create the tour group (arg2 is the tour name, using the tourID as name).
+	raw := fmt.Sprintf("action=setTour&channel=%d&arg1=%d&arg2=%d",
+		channel, tourID, tourID)
+	u := s.client.baseURL + "/cgi-bin/ptz.cgi?" + raw
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating setTour request: %w", err)
+	}
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing setTour request: %w", err)
+	}
+	if err := checkOK(resp); err != nil {
+		return err
+	}
+
+	// Add each preset to the tour.
+	for _, preset := range presets {
+		if err := s.AddTourPreset(ctx, channel, tourID, preset); err != nil {
+			return fmt.Errorf("amcrest: adding preset %d to tour %d: %w", preset, tourID, err)
+		}
+	}
+	return nil
+}
+
+// GetViewRangeStatus returns the PTZ view range status for the given channel.
+// POST /cgi-bin/api/ptz/getViewRangeStatus with JSON {"Channel": N}.
+func (s *PTZService) GetViewRangeStatus(ctx context.Context, channel int) (string, error) {
+	reqBody := struct {
+		Channel int `json:"Channel"`
+	}{Channel: channel}
+	return s.client.postRaw(ctx, "/cgi-bin/api/ptz/getViewRangeStatus", reqBody)
+}
+

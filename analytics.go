@@ -202,3 +202,9 @@ func (s *AnalyticsService) SubscribeResourceUsage(ctx context.Context) (string, 
 	}
 	return body, nil
 }
+
+// SetPollingConfig sets the platform intelligent control polling configuration.
+// PDF 9.6.14: POST /cgi-bin/api/intelli/setPollingConfig
+func (s *AnalyticsService) SetPollingConfig(ctx context.Context, body interface{}) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/intelli/setPollingConfig", body, nil)
+}
