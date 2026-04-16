@@ -1,8 +1,11 @@
 package amcrest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"mime/multipart"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -613,4 +616,173 @@ func (s *AccessControlService) GetAdminPasswordCount(ctx context.Context) (int, 
 		return 0, fmt.Errorf("amcrest: parsing admin password count: %w", err)
 	}
 	return count, nil
+}
+
+// ---------------------------------------------------------------------------
+// Section 12.4 - Additional card/fingerprint/face endpoints
+// ---------------------------------------------------------------------------
+
+// InsertCardWithFingerprint inserts an access control card record with
+// fingerprint binary data via multipart POST.
+// CGI: POST recordUpdater.cgi?action=insertEx&name=AccessControlCard
+func (s *AccessControlService) InsertCardWithFingerprint(ctx context.Context, params map[string]string, fingerprintData []byte) error {
+	qv := url.Values{
+		"name": {"AccessControlCard"},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("fingerprint", "fingerprint.bin")
+	if err != nil {
+		return fmt.Errorf("amcrest: creating multipart: %w", err)
+	}
+	if _, err := part.Write(fingerprintData); err != nil {
+		return fmt.Errorf("amcrest: writing fingerprint data: %w", err)
+	}
+	w.Close()
+
+	u := s.client.baseURL + "/cgi-bin/recordUpdater.cgi?" + url.Values{"action": {"insertEx"}}.Encode() + "&" + qv.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, &buf)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return checkOK(resp)
+}
+
+// UpdateCardWithFingerprint updates an access control card record with
+// fingerprint binary data via multipart POST.
+// CGI: POST recordUpdater.cgi?action=updateEx&name=AccessControlCard&recno=N
+func (s *AccessControlService) UpdateCardWithFingerprint(ctx context.Context, recno int, params map[string]string, fingerprintData []byte) error {
+	qv := url.Values{
+		"name":  {"AccessControlCard"},
+		"recno": {fmt.Sprintf("%d", recno)},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("fingerprint", "fingerprint.bin")
+	if err != nil {
+		return fmt.Errorf("amcrest: creating multipart: %w", err)
+	}
+	if _, err := part.Write(fingerprintData); err != nil {
+		return fmt.Errorf("amcrest: writing fingerprint data: %w", err)
+	}
+	w.Close()
+
+	u := s.client.baseURL + "/cgi-bin/recordUpdater.cgi?" + url.Values{"action": {"updateEx"}}.Encode() + "&" + qv.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, &buf)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return checkOK(resp)
+}
+
+// GetCardByRecno retrieves an access control card record by record number.
+// CGI: recordUpdater.cgi?action=get&name=AccessControlCard&recno=N
+func (s *AccessControlService) GetCardByRecno(ctx context.Context, recno int) (string, error) {
+	return s.client.cgiGet(ctx, "recordUpdater.cgi", "get", url.Values{
+		"name":  {"AccessControlCard"},
+		"recno": {fmt.Sprintf("%d", recno)},
+	})
+}
+
+// GetCardWithFingerprintByRecno retrieves an access control card record
+// including fingerprint data by record number.
+// CGI: recordUpdater.cgi?action=getEx&name=AccessControlCard&recno=N
+func (s *AccessControlService) GetCardWithFingerprintByRecno(ctx context.Context, recno int) (string, error) {
+	return s.client.cgiGet(ctx, "recordUpdater.cgi", "getEx", url.Values{
+		"name":  {"AccessControlCard"},
+		"recno": {fmt.Sprintf("%d", recno)},
+	})
+}
+
+// FindUsersV2List lists users via the V2 API (alternate endpoint).
+// POST /cgi-bin/api/AccessControl/listUser
+func (s *AccessControlService) FindUsersV2List(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/listUser", body)
+}
+
+// FindCardsV2List lists cards via the V2 API.
+// POST /cgi-bin/api/AccessControl/listCard
+func (s *AccessControlService) FindCardsV2List(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/listCard", body)
+}
+
+// StartFindCardsV2 starts a card search via the V2 API.
+// POST /cgi-bin/api/AccessControl/startFindCard
+func (s *AccessControlService) StartFindCardsV2(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/startFindCard", body)
+}
+
+// DoFindCardsV2 performs a paginated card search via the V2 API.
+// POST /cgi-bin/api/AccessControl/doFindCard
+func (s *AccessControlService) DoFindCardsV2(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/doFindCard", body)
+}
+
+// StopFindCardsV2 stops a card search via the V2 API.
+// POST /cgi-bin/api/AccessControl/stopFindCard
+func (s *AccessControlService) StopFindCardsV2(ctx context.Context, token int) error {
+	body := map[string]interface{}{"token": token}
+	return s.client.postJSON(ctx, "/cgi-bin/api/AccessControl/stopFindCard", body, nil)
+}
+
+// DeleteFacesV2Multi deletes multiple faces via the V2 API.
+// POST /cgi-bin/api/AccessControl/removeFaceMulti
+func (s *AccessControlService) DeleteFacesV2Multi(ctx context.Context, body interface{}) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/AccessControl/removeFaceMulti", body, nil)
+}
+
+// StartFindFacesV2 starts a face search via the V2 API.
+// POST /cgi-bin/api/AccessControl/startFindFace
+func (s *AccessControlService) StartFindFacesV2(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/startFindFace", body)
+}
+
+// DoFindFacesV2 performs a paginated face search via the V2 API.
+// POST /cgi-bin/api/AccessControl/doFindFace
+func (s *AccessControlService) DoFindFacesV2(ctx context.Context, body interface{}) (string, error) {
+	return s.client.postRaw(ctx, "/cgi-bin/api/AccessControl/doFindFace", body)
+}
+
+// StopFindFacesV2 stops a face search via the V2 API.
+// POST /cgi-bin/api/AccessControl/stopFindFace
+func (s *AccessControlService) StopFindFacesV2(ctx context.Context, token int) error {
+	body := map[string]interface{}{"token": token}
+	return s.client.postJSON(ctx, "/cgi-bin/api/AccessControl/stopFindFace", body, nil)
+}
+
+// ClearAdminPasswords removes all admin custom password records.
+// CGI: recordUpdater.cgi?action=clear&name=AccessControlCustomPassword
+func (s *AccessControlService) ClearAdminPasswords(ctx context.Context) error {
+	return s.client.cgiAction(ctx, "recordUpdater.cgi", "clear", url.Values{
+		"name": {"AccessControlCustomPassword"},
+	})
+}
+
+// GetAdminPasswordByRecno retrieves an admin custom password record by record number.
+// CGI: recordUpdater.cgi?action=get&name=AccessControlCustomPassword&recno=N
+func (s *AccessControlService) GetAdminPasswordByRecno(ctx context.Context, recno int) (string, error) {
+	return s.client.cgiGet(ctx, "recordUpdater.cgi", "get", url.Values{
+		"name":  {"AccessControlCustomPassword"},
+		"recno": {fmt.Sprintf("%d", recno)},
+	})
 }

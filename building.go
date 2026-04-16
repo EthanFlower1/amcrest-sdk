@@ -174,3 +174,77 @@ func (s *BuildingService) HangUpVideoTalk(ctx context.Context, params map[string
 	}
 	return s.client.cgiAction(ctx, "VideoTalkPeer.cgi", "hangUp", vals)
 }
+
+// SubscribeVideoTalkState subscribes to video talk state changes.
+// This is a long-lived stream. The raw response body is returned.
+// CGI: VideoTalkPeer.cgi?action=attachState&heartbeat=N
+func (s *BuildingService) SubscribeVideoTalkState(ctx context.Context, heartbeat int) (string, error) {
+	return s.client.cgiGet(ctx, "VideoTalkPeer.cgi", "attachState", url.Values{
+		"heartbeat": {strconv.Itoa(heartbeat)},
+	})
+}
+
+// UnsubscribeVideoTalkState unsubscribes from video talk state changes.
+// CGI: VideoTalkPeer.cgi?action=detachState
+func (s *BuildingService) UnsubscribeVideoTalkState(ctx context.Context) error {
+	return s.client.cgiAction(ctx, "VideoTalkPeer.cgi", "detachState", nil)
+}
+
+// QueryVideoTalkLog queries video talk log records with the given condition
+// parameters.
+// CGI: recordFinder.cgi?action=find&name=VideoTalkLog&...
+func (s *BuildingService) QueryVideoTalkLog(ctx context.Context, params map[string]string) (string, error) {
+	vals := url.Values{
+		"name": {"VideoTalkLog"},
+	}
+	for k, v := range params {
+		vals.Set(k, v)
+	}
+	return s.client.cgiGet(ctx, "recordFinder.cgi", "find", vals)
+}
+
+// InsertAnnouncement inserts a new announcement record.
+// CGI: recordUpdater.cgi?action=insert&name=Announcement&...
+func (s *BuildingService) InsertAnnouncement(ctx context.Context, params map[string]string) error {
+	vals := url.Values{
+		"name": {"Announcement"},
+	}
+	for k, v := range params {
+		vals.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "recordUpdater.cgi", "insert", vals)
+}
+
+// QueryAlarmRecords queries alarm records with the given condition parameters.
+// CGI: recordFinder.cgi?action=find&name=AlarmRecord&...
+func (s *BuildingService) QueryAlarmRecords(ctx context.Context, params map[string]string) (string, error) {
+	vals := url.Values{
+		"name": {"AlarmRecord"},
+	}
+	for k, v := range params {
+		vals.Set(k, v)
+	}
+	return s.client.cgiGet(ctx, "recordFinder.cgi", "find", vals)
+}
+
+// SetElevatorFloorInfo sets the elevator floor information.
+// CGI: ElevatorFloorCounter.cgi?action=setElevatorFloorInfo&...
+func (s *BuildingService) SetElevatorFloorInfo(ctx context.Context, params map[string]string) error {
+	vals := url.Values{}
+	for k, v := range params {
+		vals.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "ElevatorFloorCounter.cgi", "setElevatorFloorInfo", vals)
+}
+
+// GetElevatorWorkInfo returns elevator work information.
+// CGI: ElevatorFloorCounter.cgi?action=getElevatorWorkInfo
+func (s *BuildingService) GetElevatorWorkInfo(ctx context.Context) (string, error) {
+	return s.client.cgiGet(ctx, "ElevatorFloorCounter.cgi", "getElevatorWorkInfo", nil)
+}
+
+// GetElevatorCaps returns the elevator floor counter capabilities.
+// CGI: ElevatorFloorCounter.cgi?action=getCaps
+func (s *BuildingService) GetElevatorCaps(ctx context.Context) (string, error) {
+	return s.client.cgiGet(ctx, "ElevatorFloorCounter.cgi", "getCaps", nil)
+}

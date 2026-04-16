@@ -1,8 +1,11 @@
 package amcrest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 )
@@ -547,4 +550,113 @@ func (s *PeripheralService) UninstallApp(ctx context.Context, appName string) er
 // POST /cgi-bin/api/LensFunc/correctScene
 func (s *PeripheralService) CorrectScene(ctx context.Context, body interface{}) error {
 	return s.client.postJSON(ctx, "/cgi-bin/api/LensFunc/correctScene", body, nil)
+}
+
+// ---------------------------------------------------------------------------
+// Section 15.2 - Open Platform (additional endpoints)
+// ---------------------------------------------------------------------------
+
+// InstallApp uploads and installs an application via multipart POST.
+// CGI: POST dhop.cgi?action=uploadApp
+func (s *PeripheralService) InstallApp(ctx context.Context, appData []byte, fileName string) error {
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("file", fileName)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating multipart: %w", err)
+	}
+	if _, err := part.Write(appData); err != nil {
+		return fmt.Errorf("amcrest: writing app data: %w", err)
+	}
+	w.Close()
+
+	u := s.client.baseURL + "/cgi-bin/dhop.cgi?" + url.Values{
+		"action": {"uploadApp"},
+	}.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, &buf)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return checkOK(resp)
+}
+
+// InstallAppByURL installs an application from a remote URL.
+// CGI: dhop.cgi?action=installAppByUrl&url=X
+func (s *PeripheralService) InstallAppByURL(ctx context.Context, appURL string) error {
+	return s.client.cgiAction(ctx, "dhop.cgi", "installAppByUrl", url.Values{
+		"url": {appURL},
+	})
+}
+
+// UpdateAppByURL updates an application from a remote URL.
+// CGI: dhop.cgi?action=updateAppByUrl&url=X
+func (s *PeripheralService) UpdateAppByURL(ctx context.Context, appURL string) error {
+	return s.client.cgiAction(ctx, "dhop.cgi", "updateAppByUrl", url.Values{
+		"url": {appURL},
+	})
+}
+
+// UpdateFirmwareByURL updates device firmware from a remote URL.
+// CGI: dhop.cgi?action=updateFirmwareByUrl&url=X
+func (s *PeripheralService) UpdateFirmwareByURL(ctx context.Context, firmwareURL string) error {
+	return s.client.cgiAction(ctx, "dhop.cgi", "updateFirmwareByUrl", url.Values{
+		"url": {firmwareURL},
+	})
+}
+
+// UpdateLicenseByURL updates a license from a remote URL.
+// CGI: dhop.cgi?action=updateLicenseByUrl&url=X
+func (s *PeripheralService) UpdateLicenseByURL(ctx context.Context, licenseURL string) error {
+	return s.client.cgiAction(ctx, "dhop.cgi", "updateLicenseByUrl", url.Values{
+		"url": {licenseURL},
+	})
+}
+
+// UploadLicense uploads license data via POST.
+// CGI: POST dhop.cgi?action=uploadLicense
+func (s *PeripheralService) UploadLicense(ctx context.Context, licenseData []byte) error {
+	u := s.client.baseURL + "/cgi-bin/dhop.cgi?" + url.Values{
+		"action": {"uploadLicense"},
+	}.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(licenseData))
+	if err != nil {
+		return fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/octet-stream")
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return checkOK(resp)
+}
+
+// DownloadAppLog downloads the log file for the given application and returns
+// the raw binary data.
+// CGI: dhop.cgi?action=downloadLog&appName=X
+func (s *PeripheralService) DownloadAppLog(ctx context.Context, appName string) ([]byte, error) {
+	params := url.Values{
+		"action":  {"downloadLog"},
+		"appName": {appName},
+	}
+	resp, err := s.client.get(ctx, "/cgi-bin/dhop.cgi", params)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: downloading app log: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    fmt.Sprintf("failed to download log for %s", appName),
+		}
+	}
+	return io.ReadAll(resp.Body)
 }

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // TrafficService handles traffic-related API calls.
@@ -213,4 +215,123 @@ func (s *TrafficService) GetTrafficSnapConfig(ctx context.Context) (map[string]s
 // CGI: configManager.cgi?action=setConfig
 func (s *TrafficService) SetTrafficSnapConfig(ctx context.Context, params map[string]string) error {
 	return s.client.setConfig(ctx, params)
+}
+
+// FindTrafficFlowHistory searches for traffic flow history records with the
+// given condition parameters.
+// CGI: recordFinder.cgi?action=find&name=TrafficFlow&...
+func (s *TrafficService) FindTrafficFlowHistory(ctx context.Context, params map[string]string) (string, error) {
+	qv := url.Values{
+		"name": {"TrafficFlow"},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	return s.client.cgiGet(ctx, "recordFinder.cgi", "find", qv)
+}
+
+// DownloadExportFile downloads an exported file of the given type and returns
+// the raw binary data.
+// CGI: trafficRecord.cgi?action=downloadFile&Type=X
+func (s *TrafficService) DownloadExportFile(ctx context.Context, fileType string) ([]byte, error) {
+	params := url.Values{
+		"action": {"downloadFile"},
+		"Type":   {fileType},
+	}
+	resp, err := s.client.get(ctx, "/cgi-bin/trafficRecord.cgi", params)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: downloading export file: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    fmt.Sprintf("failed to download export file type %s", fileType),
+		}
+	}
+	return io.ReadAll(resp.Body)
+}
+
+// ExportTrafficFlow starts an asynchronous export of traffic flow data.
+// CGI: trafficRecord.cgi?action=exportAsyncFile&name=TrafficFlow
+func (s *TrafficService) ExportTrafficFlow(ctx context.Context) error {
+	return s.client.cgiAction(ctx, "trafficRecord.cgi", "exportAsyncFile", url.Values{
+		"name": {"TrafficFlow"},
+	})
+}
+
+// GetTrafficFlowExportState returns the export state for traffic flow data.
+// CGI: trafficRecord.cgi?action=getFileExportState&name=TrafficFlow
+func (s *TrafficService) GetTrafficFlowExportState(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "trafficRecord.cgi", "getFileExportState", url.Values{
+		"name": {"TrafficFlow"},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// DownloadTrafficFlow downloads the exported traffic flow file.
+// CGI: trafficRecord.cgi?action=downloadFile&Type=TrafficFlow
+func (s *TrafficService) DownloadTrafficFlow(ctx context.Context) ([]byte, error) {
+	return s.DownloadExportFile(ctx, "TrafficFlow")
+}
+
+// ExportSnapEventInfo starts an asynchronous export of traffic snap event info
+// with the given condition parameters.
+// CGI: trafficRecord.cgi?action=exportAsyncFileByConditon&name=TrafficSnapEventInfo&...
+func (s *TrafficService) ExportSnapEventInfo(ctx context.Context, params map[string]string) error {
+	qv := url.Values{
+		"name": {"TrafficSnapEventInfo"},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	return s.client.cgiAction(ctx, "trafficRecord.cgi", "exportAsyncFileByConditon", qv)
+}
+
+// GetSnapEventExportState returns the export state for traffic snap event info.
+// CGI: trafficRecord.cgi?action=getFileExportState&name=TrafficSnapEventInfo
+func (s *TrafficService) GetSnapEventExportState(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "trafficRecord.cgi", "getFileExportState", url.Values{
+		"name": {"TrafficSnapEventInfo"},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// DownloadSnapEventInfo downloads the exported traffic snap event info file.
+// CGI: trafficRecord.cgi?action=downloadFile&Type=TrafficSnapEventInfo
+func (s *TrafficService) DownloadSnapEventInfo(ctx context.Context) ([]byte, error) {
+	return s.DownloadExportFile(ctx, "TrafficSnapEventInfo")
+}
+
+// OpenUnlicensedDetection opens unlicensed vehicle detection on the given channel.
+// CGI: trafficSnap.cgi?action=open&name=UnlicensedVehicle&channel=N
+func (s *TrafficService) OpenUnlicensedDetection(ctx context.Context, channel int) error {
+	return s.client.cgiAction(ctx, "trafficSnap.cgi", "open", url.Values{
+		"name":    {"UnlicensedVehicle"},
+		"channel": {strconv.Itoa(channel)},
+	})
+}
+
+// CloseUnlicensedDetection closes unlicensed vehicle detection on the given channel.
+// CGI: trafficSnap.cgi?action=close&name=UnlicensedVehicle&channel=N
+func (s *TrafficService) CloseUnlicensedDetection(ctx context.Context, channel int) error {
+	return s.client.cgiAction(ctx, "trafficSnap.cgi", "close", url.Values{
+		"name":    {"UnlicensedVehicle"},
+		"channel": {strconv.Itoa(channel)},
+	})
+}
+
+// SubscribeVehiclesDistribution subscribes to vehicles distribution data on the
+// given channel. This is a long-lived stream; the raw response body is returned.
+// CGI: vehiclesDistribution.cgi?action=attach&channel=N
+func (s *TrafficService) SubscribeVehiclesDistribution(ctx context.Context, channel int) (string, error) {
+	return s.client.cgiGet(ctx, "vehiclesDistribution.cgi", "attach", url.Values{
+		"channel": {strconv.Itoa(channel)},
+	})
 }

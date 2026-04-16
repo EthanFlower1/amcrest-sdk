@@ -323,6 +323,113 @@ func (s *RecordingService) FindFilesWithFilter(ctx context.Context, opts FindFil
 	return files, nil
 }
 
+// findFilesWithEvents searches for media files with event conditions and DB filter parameters.
+// It extends the FindFiles flow by adding Flags, Events, and DB filter conditions.
+func (s *RecordingService) findFilesWithEvents(ctx context.Context, opts FindFilesOpts, eventName, filterPrefix string, filter map[string]string) ([]MediaFile, error) {
+	if opts.Type == "" {
+		opts.Type = "jpg"
+	}
+
+	// Step 1: factory.create
+	body, err := s.client.cgiGet(ctx, "mediaFileFind.cgi", "factory.create", nil)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: mediaFileFind factory.create: %w", err)
+	}
+	kv := parseKV(body)
+	objectID := kv["result"]
+	if objectID == "" {
+		return nil, fmt.Errorf("amcrest: mediaFileFind factory.create returned no object ID")
+	}
+
+	defer func() {
+		_ = s.mediaFileFindRaw(ctx, objectID, "close", "")
+		_ = s.mediaFileFindRaw(ctx, objectID, "destroy", "")
+	}()
+
+	// Step 2: findFile with event conditions
+	findExtra := fmt.Sprintf(
+		"condition.Channel=%d"+
+			"&condition.StartTime=%s"+
+			"&condition.EndTime=%s",
+		opts.Channel,
+		amcrestEscape(opts.StartTime),
+		amcrestEscape(opts.EndTime),
+	)
+	if opts.Type != "" {
+		findExtra += "&condition.Types[0]=" + amcrestEscape(opts.Type)
+	}
+	findExtra += "&condition.Flags[0]=Event"
+	findExtra += "&condition.Events[0]=" + amcrestEscape(eventName)
+
+	// Add DB filter conditions with the appropriate prefix.
+	for k, v := range filter {
+		findExtra += "&condition.DB." + filterPrefix + amcrestEscape(k) + "=" + amcrestEscape(v)
+	}
+
+	body, err = s.mediaFileFindRawBody(ctx, objectID, "findFile", findExtra)
+	if err != nil {
+		return nil, fmt.Errorf("amcrest: mediaFileFind findFile: %w", err)
+	}
+
+	// Step 3: findNextFile loop
+	var files []MediaFile
+	for {
+		body, err = s.mediaFileFindRawBody(ctx, objectID, "findNextFile", "count=100")
+		if err != nil {
+			return nil, fmt.Errorf("amcrest: mediaFileFind findNextFile: %w", err)
+		}
+
+		batch := parseMediaFiles(body)
+		if len(batch) == 0 {
+			break
+		}
+		files = append(files, batch...)
+
+		kv := parseKV(body)
+		if kv["found"] == "0" {
+			break
+		}
+	}
+
+	return files, nil
+}
+
+// FindFaceDetectionFiles searches for face detection event recordings.
+// Filter keys are prefixed with "FaceDetectionRecordFilter." automatically.
+func (s *RecordingService) FindFaceDetectionFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "FaceDetection", "FaceDetectionRecordFilter.", filter)
+}
+
+// FindFaceRecognitionFiles searches for face recognition event recordings.
+// Filter keys are prefixed with "FaceRecognitionRecordFilter." automatically.
+func (s *RecordingService) FindFaceRecognitionFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "FaceRecognition", "FaceRecognitionRecordFilter.", filter)
+}
+
+// FindHumanTraitFiles searches for human trait event recordings.
+// Filter keys are prefixed with "HumanTraitRecordFilter." automatically.
+func (s *RecordingService) FindHumanTraitFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "HumanTrait", "HumanTraitRecordFilter.", filter)
+}
+
+// FindTrafficCarFiles searches for traffic car event recordings.
+// Filter keys are prefixed with "TrafficCar." automatically.
+func (s *RecordingService) FindTrafficCarFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "TrafficCar", "TrafficCar.", filter)
+}
+
+// FindIVSFiles searches for IVS (intelligent video surveillance) event recordings.
+// Filter keys are prefixed with "IVS." automatically.
+func (s *RecordingService) FindIVSFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "IVS", "IVS.", filter)
+}
+
+// FindNonMotorFiles searches for non-motor vehicle event recordings.
+// Filter keys are prefixed with "NonMotorRecordFilter." automatically.
+func (s *RecordingService) FindNonMotorFiles(ctx context.Context, opts FindFilesOpts, filter map[string]string) ([]MediaFile, error) {
+	return s.findFilesWithEvents(ctx, opts, "NonMotor", "NonMotorRecordFilter.", filter)
+}
+
 // DownloadByTime downloads a recording by time range and returns the raw bytes.
 // CGI: loadfile.cgi?action=startLoad&channel=N&startTime=X&endTime=Y&subtype=Z
 func (s *RecordingService) DownloadByTime(ctx context.Context, channel int, startTime, endTime string, subtype int) ([]byte, error) {

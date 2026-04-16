@@ -1,9 +1,12 @@
 package amcrest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"mime/multipart"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -151,4 +154,35 @@ func (s *DVRService) ListDirectory(ctx context.Context, path string) (string, er
 // global.cgi?action=getDST
 func (s *DVRService) GetDaylight(ctx context.Context) (string, error) {
 	return s.client.cgiGet(ctx, "global.cgi", "getDST", nil)
+}
+
+// UploadFile uploads a file to the DVR via multipart POST.
+// CGI: POST FileManager.cgi?action=uploadFile
+func (s *DVRService) UploadFile(ctx context.Context, fileName string, data []byte) error {
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("file", fileName)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating multipart: %w", err)
+	}
+	if _, err := part.Write(data); err != nil {
+		return fmt.Errorf("amcrest: writing file data: %w", err)
+	}
+	w.Close()
+
+	u := s.client.baseURL + "/cgi-bin/FileManager.cgi?" + url.Values{
+		"action": {"uploadFile"},
+	}.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, &buf)
+	if err != nil {
+		return fmt.Errorf("amcrest: creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	resp, err := s.client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("amcrest: executing request: %w", err)
+	}
+	return checkOK(resp)
 }

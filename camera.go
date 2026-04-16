@@ -187,3 +187,13 @@ func (s *CameraService) SetLightingConfig(ctx context.Context, params map[string
 func (s *CameraService) SetVideoInOptions(ctx context.Context, params map[string]string) error {
 	return s.client.setConfig(ctx, params)
 }
+
+// ChangeSpliceMode changes the multi-video splice mode for the given channel.
+// POST: /cgi-bin/api/MultiVideo/changeSpliceMode
+func (s *CameraService) ChangeSpliceMode(ctx context.Context, channel int, mode string) error {
+	reqBody := struct {
+		Channel int    `json:"channel"`
+		Mode    string `json:"mode"`
+	}{Channel: channel, Mode: mode}
+	return s.client.postJSON(ctx, "/cgi-bin/api/MultiVideo/changeSpliceMode", reqBody, nil)
+}

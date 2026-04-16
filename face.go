@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+// Face event codes for use with EventService.Subscribe.
+// Example: client.Event.Subscribe(ctx, []string{EventFaceDetection}, 5)
+const (
+	EventFaceDetection       = "FaceDetection"
+	EventFaceRecognition     = "FaceRecognition"
+	EventFaceFeatureAbstract = "FaceFeatureAbstract"
+)
+
 // FaceService handles face detection and recognition related API calls.
 // PDF Reference: docs/HTTP_API_V3.26.pdf pp. 334-361 (Section 9.2)
 type FaceService struct {

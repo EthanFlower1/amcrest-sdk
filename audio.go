@@ -187,3 +187,15 @@ func (s *AudioService) SetAudioAnalyseClassConfig(ctx context.Context, body inte
 func (s *AudioService) GetAudioAnalyseCaps(ctx context.Context) (string, error) {
 	return s.client.postRaw(ctx, "/cgi-bin/api/AudioAnalyseManager/getCaps", struct{}{})
 }
+
+// PlayAudio triggers audio playback of a file on the camera.
+// The status string will be "OK", "Busy", or "Error".
+// POST: /cgi-bin/api/Speak/startPlayByTime
+func (s *AudioService) PlayAudio(ctx context.Context, path, fileName string, playTimes int) (string, error) {
+	reqBody := struct {
+		Path      string `json:"Path"`
+		FileName  string `json:"FileName"`
+		PlayTimes int    `json:"PlayTimes"`
+	}{Path: path, FileName: fileName, PlayTimes: playTimes}
+	return s.client.postRaw(ctx, "/cgi-bin/api/Speak/startPlayByTime", reqBody)
+}

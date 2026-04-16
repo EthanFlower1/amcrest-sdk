@@ -123,3 +123,26 @@ func (s *ParkingService) GetSpaceNo(ctx context.Context, channel int, params map
 	}
 	return s.client.cgiGet(ctx, "trafficParking.cgi", "getSpaceNo", v)
 }
+
+// GetSpaceStatusCGI retrieves the status of a specific parking space via the
+// documented CGI endpoint.
+// CGI: trafficSnap.cgi?action=getParkingSpaceStatus&channel=N&SpaceNo=S
+func (s *ParkingService) GetSpaceStatusCGI(ctx context.Context, channel, spaceNo int) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "trafficSnap.cgi", "getParkingSpaceStatus", url.Values{
+		"channel": {strconv.Itoa(channel)},
+		"SpaceNo": {strconv.Itoa(spaceNo)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetAllSpaceStatusCGI retrieves the status of all parking spaces on a channel
+// via the documented CGI endpoint.
+// CGI: trafficParking.cgi?action=getAllParkingSpaceStatus&channel=N
+func (s *ParkingService) GetAllSpaceStatusCGI(ctx context.Context, channel int) (string, error) {
+	return s.client.cgiGet(ctx, "trafficParking.cgi", "getAllParkingSpaceStatus", url.Values{
+		"channel": {strconv.Itoa(channel)},
+	})
+}

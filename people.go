@@ -3,6 +3,8 @@ package amcrest
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 )
 
 // PeopleService handles people counting related API calls.
@@ -156,4 +158,21 @@ func (s *PeopleService) SubscribeCrowdStat(ctx context.Context, body interface{}
 		return "", fmt.Errorf("PeopleService.SubscribeCrowdStat: %w", err)
 	}
 	return resp, nil
+}
+
+// SubscribeHeatMapRaw subscribes to raw heat map data for the given channel.
+// This is a long-lived stream. The raw response body is returned as a string.
+// CGI: HeatMapManager.cgi?action=attachRaw&channel=N
+func (s *PeopleService) SubscribeHeatMapRaw(ctx context.Context, channel int) (string, error) {
+	params := url.Values{
+		"channel": {strconv.Itoa(channel)},
+	}
+	resp, err := s.client.get(ctx, "/cgi-bin/HeatMapManager.cgi", url.Values{
+		"action":  {"attachRaw"},
+		"channel": params["channel"],
+	})
+	if err != nil {
+		return "", fmt.Errorf("PeopleService.SubscribeHeatMapRaw: %w", err)
+	}
+	return readBody(resp)
 }
