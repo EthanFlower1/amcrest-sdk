@@ -60,12 +60,11 @@ func TestVideo(t *testing.T) {
 	})
 
 	t.Run("GetVideoOutputChannels", func(t *testing.T) {
+		if !hasVideoOutput {
+			t.Skip("camera does not support devVideoOutput channels")
+		}
 		n, err := c.Video.GetVideoOutputChannels(ctx)
 		if err != nil {
-			var apiErr *APIError
-			if errors.As(err, &apiErr) && (apiErr.StatusCode == 400 || apiErr.StatusCode == 501) {
-				t.Skip("devVideoOutput not supported on this device")
-			}
 			t.Fatalf("GetVideoOutputChannels: %v", err)
 		}
 		t.Logf("VideoOutputChannels: %d", n)
@@ -144,12 +143,11 @@ func TestVideo(t *testing.T) {
 	})
 
 	t.Run("GetSmartEncodeConfig", func(t *testing.T) {
+		if !hasSmartEncode {
+			t.Skip("camera does not support SmartEncode config")
+		}
 		cfg, err := c.Video.GetSmartEncodeConfig(ctx)
 		if err != nil {
-			var apiErr *APIError
-			if errors.As(err, &apiErr) && (apiErr.StatusCode == 400 || apiErr.StatusCode == 501) {
-				t.Skip("SmartEncode not supported on this device")
-			}
 			t.Fatalf("GetSmartEncodeConfig: %v", err)
 		}
 		for k, v := range cfg {
@@ -171,12 +169,11 @@ func TestVideo(t *testing.T) {
 	})
 
 	t.Run("GetEncodeConfigCaps", func(t *testing.T) {
+		if !hasEncodeConfCaps {
+			t.Skip("camera does not support EncodeConfigCaps")
+		}
 		caps, err := c.Video.GetEncodeConfigCaps(ctx, 0)
 		if err != nil {
-			var apiErr *APIError
-			if errors.As(err, &apiErr) && (apiErr.StatusCode == 400 || apiErr.StatusCode == 501) {
-				t.Skip("GetEncodeConfigCaps not supported on this device")
-			}
 			t.Fatalf("GetEncodeConfigCaps: %v", err)
 		}
 		for k, v := range caps {
@@ -185,12 +182,11 @@ func TestVideo(t *testing.T) {
 	})
 
 	t.Run("GetVideoEncodeROI", func(t *testing.T) {
+		if !hasEncodeROI {
+			t.Skip("camera does not support VideoEncodeROI config")
+		}
 		cfg, err := c.Video.GetVideoEncodeROI(ctx)
 		if err != nil {
-			var apiErr *APIError
-			if errors.As(err, &apiErr) && (apiErr.StatusCode == 400 || apiErr.StatusCode == 501) {
-				t.Skip("VideoEncodeROI not supported on this device")
-			}
 			t.Fatalf("GetVideoEncodeROI: %v", err)
 		}
 		for k, v := range cfg {

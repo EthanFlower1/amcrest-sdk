@@ -58,19 +58,23 @@ func TestPTZ(t *testing.T) {
 	})
 
 	t.Run("GetViewRangeStatus", func(t *testing.T) {
+		if !hasViewRange {
+			t.Skip("camera does not support PTZ ViewRange")
+		}
 		status, err := c.PTZ.GetViewRangeStatus(ctx, 0)
 		if err != nil {
-			t.Logf("GetViewRangeStatus not available: %v", err)
-			return
+			t.Fatalf("GetViewRangeStatus: %v", err)
 		}
 		t.Logf("ViewRangeStatus: %s", status)
 	})
 
 	t.Run("GetEPTZConfig", func(t *testing.T) {
+		if !hasEPTZ {
+			t.Skip("camera does not support EPTZ config")
+		}
 		cfg, err := c.PTZ.GetEPTZConfig(ctx)
 		if err != nil {
-			t.Logf("GetEPTZConfig not available: %v", err)
-			return
+			t.Fatalf("GetEPTZConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("EPTZ.%s = %s", k, v)
@@ -78,10 +82,12 @@ func TestPTZ(t *testing.T) {
 	})
 
 	t.Run("GetAutoMovementConfig", func(t *testing.T) {
+		if !hasAutoMovement {
+			t.Skip("camera does not support PTZ AutoMovement config")
+		}
 		cfg, err := c.PTZ.GetAutoMovementConfig(ctx)
 		if err != nil {
-			t.Logf("GetAutoMovementConfig not available: %v", err)
-			return
+			t.Fatalf("GetAutoMovementConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("AutoMovement.%s = %s", k, v)

@@ -12,6 +12,9 @@ func TestRecording(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetCaps", func(t *testing.T) {
+		if !hasRecordCaps {
+			t.Skip("camera does not support recordManager.cgi getCaps")
+		}
 		caps, err := c.Recording.GetCaps(ctx)
 		if err != nil {
 			t.Fatalf("GetCaps: %v", err)
@@ -25,6 +28,9 @@ func TestRecording(t *testing.T) {
 	})
 
 	t.Run("GetRecordConfig", func(t *testing.T) {
+		if !hasMediaFileFind {
+			t.Skip("camera does not support Record config")
+		}
 		cfg, err := c.Recording.GetRecordConfig(ctx)
 		if err != nil {
 			t.Fatalf("GetRecordConfig: %v", err)
@@ -38,6 +44,9 @@ func TestRecording(t *testing.T) {
 	})
 
 	t.Run("GetRecordMode", func(t *testing.T) {
+		if !hasMediaFileFind {
+			t.Skip("camera does not support RecordMode config")
+		}
 		cfg, err := c.Recording.GetRecordMode(ctx)
 		if err != nil {
 			t.Fatalf("GetRecordMode: %v", err)
@@ -51,6 +60,9 @@ func TestRecording(t *testing.T) {
 	})
 
 	t.Run("GetMediaGlobal", func(t *testing.T) {
+		if !hasMediaFileFind {
+			t.Skip("camera does not support MediaGlobal config")
+		}
 		cfg, err := c.Recording.GetMediaGlobal(ctx)
 		if err != nil {
 			t.Fatalf("GetMediaGlobal: %v", err)
@@ -64,6 +76,9 @@ func TestRecording(t *testing.T) {
 	})
 
 	t.Run("FindFiles", func(t *testing.T) {
+		if !hasMediaFileFind {
+			t.Skip("camera does not support media file find")
+		}
 		now := time.Now()
 		start := now.Add(-24 * time.Hour)
 

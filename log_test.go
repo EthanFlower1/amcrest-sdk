@@ -12,6 +12,9 @@ func TestLog(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Find", func(t *testing.T) {
+		if !hasLogFind {
+			t.Skip("camera does not support log.cgi find")
+		}
 		end := time.Now().Format("2006-01-02 15:04:05")
 		start := time.Now().Add(-24 * time.Hour).Format("2006-01-02 15:04:05")
 
@@ -30,6 +33,9 @@ func TestLog(t *testing.T) {
 	})
 
 	t.Run("Backup", func(t *testing.T) {
+		if !hasLogFind {
+			t.Skip("camera does not support log.cgi")
+		}
 		end := time.Now().Format("2006-01-02 15:04:05")
 		start := time.Now().Add(-24 * time.Hour).Format("2006-01-02 15:04:05")
 

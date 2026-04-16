@@ -190,10 +190,12 @@ func TestSystem(t *testing.T) {
 	})
 
 	t.Run("GetLanguage", func(t *testing.T) {
+		if !hasLanguage {
+			t.Skip("camera does not support GetLanguage endpoint")
+		}
 		v, err := c.System.GetLanguage(ctx)
 		if err != nil {
-			t.Logf("GetLanguage not available: %v", err)
-			return
+			t.Fatalf("GetLanguage: %v", err)
 		}
 		t.Logf("Language: %q", v)
 	})
@@ -212,19 +214,23 @@ func TestSystem(t *testing.T) {
 	})
 
 	t.Run("GetOnvifVersion", func(t *testing.T) {
+		if !hasOnvifVersion {
+			t.Skip("camera does not support ONVIF version endpoint")
+		}
 		v, err := c.System.GetOnvifVersion(ctx)
 		if err != nil {
-			t.Logf("GetOnvifVersion not available: %v", err)
-			return
+			t.Fatalf("GetOnvifVersion: %v", err)
 		}
 		t.Logf("OnvifVersion: %s", v)
 	})
 
 	t.Run("GetHTTPAPIVersion", func(t *testing.T) {
+		if !hasHTTPAPIVersion {
+			t.Skip("camera does not support HTTP API version endpoint")
+		}
 		v, err := c.System.GetHTTPAPIVersion(ctx)
 		if err != nil {
-			t.Logf("GetHTTPAPIVersion not available: %v", err)
-			return
+			t.Fatalf("GetHTTPAPIVersion: %v", err)
 		}
 		t.Logf("HTTPAPIVersion: %s", v)
 	})

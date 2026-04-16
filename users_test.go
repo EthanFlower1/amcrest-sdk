@@ -58,13 +58,16 @@ func TestUsers(t *testing.T) {
 	})
 
 	t.Run("AddDeleteUser", func(t *testing.T) {
+		if !hasUserMgmt {
+			t.Skip("camera does not support user management (no 'user' group)")
+		}
+
 		const testUser = "sdktest"
 		const testPass = "TestPass123!"
 		const testGroup = "user"
 
 		if err := c.User.AddUser(ctx, testUser, testPass, testGroup); err != nil {
-			// Some cameras (e.g., doorbells) don't support user management
-			t.Skipf("AddUser not supported on this camera: %v", err)
+			t.Fatalf("AddUser: %v", err)
 		}
 		t.Logf("Created user %q", testUser)
 

@@ -11,10 +11,12 @@ func TestUpload(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetPictureUploadConfig", func(t *testing.T) {
+		if !hasUploadPicture {
+			t.Skip("camera does not support PictureHttpUpload config")
+		}
 		cfg, err := c.Upload.GetPictureUploadConfig(ctx)
 		if err != nil {
-			t.Logf("GetPictureUploadConfig not available: %v", err)
-			return
+			t.Fatalf("GetPictureUploadConfig: %v", err)
 		}
 		if len(cfg) == 0 {
 			t.Log("PictureHttpUpload config returned empty map")
@@ -25,10 +27,12 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("GetEventUploadConfig", func(t *testing.T) {
+		if !hasUploadEvent {
+			t.Skip("camera does not support EventHttpUpload config")
+		}
 		cfg, err := c.Upload.GetEventUploadConfig(ctx)
 		if err != nil {
-			t.Logf("GetEventUploadConfig not available: %v", err)
-			return
+			t.Fatalf("GetEventUploadConfig: %v", err)
 		}
 		if len(cfg) == 0 {
 			t.Log("EventHttpUpload config returned empty map")
@@ -39,10 +43,12 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("GetReportUploadConfig", func(t *testing.T) {
+		if !hasUploadReport {
+			t.Skip("camera does not support ReportHttpUpload config")
+		}
 		cfg, err := c.Upload.GetReportUploadConfig(ctx)
 		if err != nil {
-			t.Logf("GetReportUploadConfig not available: %v", err)
-			return
+			t.Fatalf("GetReportUploadConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("ReportUpload.%s = %s", k, v)

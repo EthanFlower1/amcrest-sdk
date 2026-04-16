@@ -61,6 +61,9 @@ func TestNetwork(t *testing.T) {
 	})
 
 	t.Run("GetEmailConfig", func(t *testing.T) {
+		if !hasEmail {
+			t.Skip("camera does not support Email config")
+		}
 		cfg, err := c.Network.GetEmailConfig(ctx)
 		if err != nil {
 			t.Fatalf("GetEmailConfig: %v", err)
@@ -74,14 +77,15 @@ func TestNetwork(t *testing.T) {
 	})
 
 	t.Run("GetWLanConfig", func(t *testing.T) {
+		if !hasWLan {
+			t.Skip("camera does not support WLan config")
+		}
 		cfg, err := c.Network.GetWLanConfig(ctx)
 		if err != nil {
-			t.Logf("GetWLanConfig not available: %v", err)
-			return
+			t.Fatalf("GetWLanConfig: %v", err)
 		}
 		if len(cfg) == 0 {
-			t.Log("WLan config is empty (WiFi may not be available)")
-			return
+			t.Log("WLan config is empty (WiFi may not be configured)")
 		}
 		for k, v := range cfg {
 			t.Logf("WLan.%s = %s", k, v)
@@ -154,10 +158,12 @@ func TestNetwork(t *testing.T) {
 	})
 
 	t.Run("GetSSHDConfig", func(t *testing.T) {
+		if !hasSSHD {
+			t.Skip("camera does not support SSHD config")
+		}
 		cfg, err := c.Network.GetSSHDConfig(ctx)
 		if err != nil {
-			t.Logf("GetSSHDConfig not available: %v", err)
-			return
+			t.Fatalf("GetSSHDConfig: %v", err)
 		}
 		if len(cfg) == 0 {
 			t.Fatal("expected non-empty SSHD config")
@@ -168,10 +174,12 @@ func TestNetwork(t *testing.T) {
 	})
 
 	t.Run("ScanWLanDevices", func(t *testing.T) {
+		if !hasWLan {
+			t.Skip("camera does not support WLan")
+		}
 		v, err := c.Network.ScanWLanDevices(ctx)
 		if err != nil {
-			t.Logf("ScanWLanDevices not available: %v", err)
-			return
+			t.Fatalf("ScanWLanDevices: %v", err)
 		}
 		t.Logf("WLan scan:\n%s", v)
 	})

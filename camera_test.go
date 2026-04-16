@@ -24,8 +24,8 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetExposureConfig", func(t *testing.T) {
-		if videoInputCaps != nil && videoInputCaps["Exposure"] == "0" {
-			t.Skip("camera does not support Exposure")
+		if capsInt(videoInputCaps, "caps.Exposure") == 0 && videoInputCaps != nil {
+			t.Skip("camera does not support exposure control")
 		}
 		cfg, err := c.Camera.GetExposureConfig(ctx)
 		if err != nil {
@@ -40,8 +40,8 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetBacklightConfig", func(t *testing.T) {
-		if videoInputCaps != nil && videoInputCaps["Backlight"] == "0" {
-			t.Skip("camera does not support Backlight")
+		if capsInt(videoInputCaps, "caps.Backlight") == 0 && videoInputCaps != nil {
+			t.Skip("camera does not support backlight control")
 		}
 		cfg, err := c.Camera.GetBacklightConfig(ctx)
 		if err != nil {
@@ -69,7 +69,7 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetDayNightConfig", func(t *testing.T) {
-		if videoInputCaps != nil && videoInputCaps["DayNightColor"] == "0" {
+		if capsInt(videoInputCaps, "caps.DayNightColor") == 0 && videoInputCaps != nil {
 			t.Skip("camera does not support DayNightColor")
 		}
 		cfg, err := c.Camera.GetDayNightConfig(ctx)
@@ -85,10 +85,12 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetFocusStatus", func(t *testing.T) {
+		if !hasFocusControl {
+			t.Skip("camera does not support electric focus (ElectricFocus cap)")
+		}
 		cfg, err := c.Camera.GetFocusStatus(ctx, 0)
 		if err != nil {
-			t.Logf("GetFocusStatus not available: %v", err)
-			return
+			t.Fatalf("GetFocusStatus: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("Focus.%s = %s", k, v)
@@ -96,10 +98,12 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetLightingConfig", func(t *testing.T) {
+		if !hasLighting {
+			t.Skip("camera does not support lighting (InfraRed cap)")
+		}
 		cfg, err := c.Camera.GetLightingConfig(ctx)
 		if err != nil {
-			t.Logf("GetLightingConfig not available: %v", err)
-			return
+			t.Fatalf("GetLightingConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("Lighting.%s = %s", k, v)
@@ -107,10 +111,12 @@ func TestCamera(t *testing.T) {
 	})
 
 	t.Run("GetVideoInOptions", func(t *testing.T) {
+		if !hasVideoInOptions {
+			t.Skip("camera does not support VideoInOptions config")
+		}
 		cfg, err := c.Camera.GetVideoInOptions(ctx)
 		if err != nil {
-			t.Logf("GetVideoInOptions not available: %v", err)
-			return
+			t.Fatalf("GetVideoInOptions: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("VideoInOptions.%s = %s", k, v)

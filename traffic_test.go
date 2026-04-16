@@ -21,10 +21,12 @@ func TestTraffic(t *testing.T) {
 	})
 
 	t.Run("FindRedList", func(t *testing.T) {
+		if !hasRedList {
+			t.Skip("camera does not support TrafficRedList")
+		}
 		v, err := c.Traffic.FindRecord(ctx, "TrafficRedList")
 		if err != nil {
-			t.Logf("FindRecord(TrafficRedList) not available: %v", err)
-			return
+			t.Fatalf("FindRecord(TrafficRedList): %v", err)
 		}
 		t.Logf("FindRecord TrafficRedList:\n%s", v)
 	})

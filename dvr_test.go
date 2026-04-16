@@ -11,10 +11,12 @@ func TestDVR(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetBandwidthLimit", func(t *testing.T) {
+		if !hasBandwidthLimit {
+			t.Skip("camera does not support BandwidthLimit config")
+		}
 		cfg, err := c.DVR.GetBandwidthLimit(ctx)
 		if err != nil {
-			t.Logf("GetBandwidthLimit not available: %v", err)
-			return
+			t.Fatalf("GetBandwidthLimit: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("Bandwidth.%s = %s", k, v)
@@ -22,10 +24,12 @@ func TestDVR(t *testing.T) {
 	})
 
 	t.Run("StartFindAndStop", func(t *testing.T) {
+		if !hasDVR {
+			t.Skip("camera does not support DVR media find")
+		}
 		findId, err := c.DVR.StartFind(ctx, 0, "2024-01-01 00:00:00", "2024-01-02 00:00:00")
 		if err != nil {
-			t.Logf("DVR StartFind not available: %v", err)
-			return
+			t.Fatalf("DVR StartFind: %v", err)
 		}
 		t.Logf("findId: %s", findId)
 

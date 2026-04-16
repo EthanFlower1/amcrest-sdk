@@ -12,6 +12,9 @@ func TestStorage(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetAllDeviceInfo", func(t *testing.T) {
+		if !hasStorageDevInfo {
+			t.Skip("camera does not support storageDevice getDeviceAllInfo")
+		}
 		body, err := c.Storage.GetAllDeviceInfo(ctx)
 		if err != nil {
 			t.Fatalf("GetAllDeviceInfo: %v", err)
@@ -23,6 +26,9 @@ func TestStorage(t *testing.T) {
 	})
 
 	t.Run("GetDeviceNames", func(t *testing.T) {
+		if !hasStorageCollect {
+			t.Skip("camera does not support storageDevice factory.getCollect")
+		}
 		body, err := c.Storage.GetDeviceNames(ctx)
 		if err != nil {
 			t.Fatalf("GetDeviceNames: %v", err)

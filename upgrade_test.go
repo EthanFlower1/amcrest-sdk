@@ -11,10 +11,12 @@ func TestUpgrade(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetState", func(t *testing.T) {
+		if !hasUpgrade {
+			t.Skip("camera does not support upgrader.cgi getState")
+		}
 		state, err := c.Upgrade.GetState(ctx)
 		if err != nil {
-			t.Logf("GetState not available: %v", err)
-			return
+			t.Fatalf("GetState: %v", err)
 		}
 		if len(state) == 0 {
 			t.Log("upgrade state returned empty map (no upgrade in progress)")
@@ -25,10 +27,12 @@ func TestUpgrade(t *testing.T) {
 	})
 
 	t.Run("CheckCloudUpdate", func(t *testing.T) {
+		if !hasCloudUpgrade {
+			t.Skip("camera does not support CloudUpgrader/check")
+		}
 		result, err := c.Upgrade.CheckCloudUpdate(ctx)
 		if err != nil {
-			t.Logf("CheckCloudUpdate not available: %v", err)
-			return
+			t.Fatalf("CheckCloudUpdate: %v", err)
 		}
 		for k, v := range result {
 			t.Logf("CloudUpdate.%s = %s", k, v)
@@ -36,10 +40,12 @@ func TestUpgrade(t *testing.T) {
 	})
 
 	t.Run("GetAutoUpgradeConfig", func(t *testing.T) {
+		if !hasAutoUpgrade {
+			t.Skip("camera does not support AutoUpgrade config")
+		}
 		cfg, err := c.Upgrade.GetAutoUpgradeConfig(ctx)
 		if err != nil {
-			t.Logf("GetAutoUpgradeConfig not available: %v", err)
-			return
+			t.Fatalf("GetAutoUpgradeConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("AutoUpgrade.%s = %s", k, v)
@@ -47,10 +53,12 @@ func TestUpgrade(t *testing.T) {
 	})
 
 	t.Run("GetCloudUpgradeMode", func(t *testing.T) {
+		if !hasCloudMode {
+			t.Skip("camera does not support CloudUpgrade config")
+		}
 		cfg, err := c.Upgrade.GetCloudUpgradeMode(ctx)
 		if err != nil {
-			t.Logf("GetCloudUpgradeMode not available: %v", err)
-			return
+			t.Fatalf("GetCloudUpgradeMode: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("CloudUpgrade.%s = %s", k, v)

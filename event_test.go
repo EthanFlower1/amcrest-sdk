@@ -58,6 +58,9 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetAlarmInputChannels", func(t *testing.T) {
+		if !hasAlarmInputCh {
+			t.Skip("camera does not support alarm input channels")
+		}
 		n, err := c.Event.GetAlarmInputChannels(ctx)
 		if err != nil {
 			t.Fatalf("GetAlarmInputChannels: %v", err)
@@ -66,6 +69,9 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetAlarmOutputChannels", func(t *testing.T) {
+		if !hasAlarmOutputCh {
+			t.Skip("camera does not support alarm output channels")
+		}
 		n, err := c.Event.GetAlarmOutputChannels(ctx)
 		if err != nil {
 			t.Fatalf("GetAlarmOutputChannels: %v", err)
@@ -90,10 +96,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetLossDetectConfig", func(t *testing.T) {
+		if !hasLossDetect {
+			t.Skip("camera does not support LossDetect config")
+		}
 		cfg, err := c.Event.GetLossDetectConfig(ctx)
 		if err != nil {
-			t.Logf("GetLossDetectConfig not available: %v", err)
-			return
+			t.Fatalf("GetLossDetectConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("LossDetect.%s = %s", k, v)
@@ -156,10 +164,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetNetAbortConfig", func(t *testing.T) {
+		if !hasNetAbort {
+			t.Skip("camera does not support NetAbort config")
+		}
 		cfg, err := c.Event.GetNetAbortConfig(ctx)
 		if err != nil {
-			t.Logf("GetNetAbortConfig not available: %v", err)
-			return
+			t.Fatalf("GetNetAbortConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("NetAbort.%s = %s", k, v)
@@ -167,10 +177,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetIPConflictConfig", func(t *testing.T) {
+		if !hasIPConflict {
+			t.Skip("camera does not support IPConflict config")
+		}
 		cfg, err := c.Event.GetIPConflictConfig(ctx)
 		if err != nil {
-			t.Logf("GetIPConflictConfig not available: %v", err)
-			return
+			t.Fatalf("GetIPConflictConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("IPConflict.%s = %s", k, v)
@@ -178,13 +190,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetEventHandlerConfig_VideoMotion", func(t *testing.T) {
-		if !supportsEvent("VideoMotion") {
-			t.Skip("camera does not support VideoMotion event")
+		if !hasEventHandler {
+			t.Skip("camera does not support EventHandler config for VideoMotion")
 		}
 		cfg, err := c.Event.GetEventHandlerConfig(ctx, "VideoMotion")
 		if err != nil {
-			t.Logf("GetEventHandlerConfig(VideoMotion) not available: %v", err)
-			return
+			t.Fatalf("GetEventHandlerConfig(VideoMotion): %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("EventHandler.VideoMotion.%s = %s", k, v)
@@ -192,10 +203,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetAlarmConfig", func(t *testing.T) {
+		if !hasAlarmConfig {
+			t.Skip("camera does not support Alarm config")
+		}
 		cfg, err := c.Event.GetAlarmConfig(ctx)
 		if err != nil {
-			t.Logf("GetAlarmConfig not available: %v", err)
-			return
+			t.Fatalf("GetAlarmConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("Alarm.%s = %s", k, v)
@@ -203,10 +216,12 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("GetAlarmOutConfig", func(t *testing.T) {
+		if !hasAlarmOut {
+			t.Skip("camera does not support AlarmOut config")
+		}
 		cfg, err := c.Event.GetAlarmOutConfig(ctx)
 		if err != nil {
-			t.Logf("GetAlarmOutConfig not available: %v", err)
-			return
+			t.Fatalf("GetAlarmOutConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("AlarmOut.%s = %s", k, v)

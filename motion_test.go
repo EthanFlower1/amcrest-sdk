@@ -24,10 +24,12 @@ func TestMotion(t *testing.T) {
 	})
 
 	t.Run("GetSmartMotionConfig", func(t *testing.T) {
+		if !hasSmartMotion {
+			t.Skip("camera does not support SmartMotionDetect config")
+		}
 		cfg, err := c.Motion.GetSmartMotionConfig(ctx)
 		if err != nil {
-			t.Logf("GetSmartMotionConfig not available: %v", err)
-			return
+			t.Fatalf("GetSmartMotionConfig: %v", err)
 		}
 		if len(cfg) == 0 {
 			t.Fatal("expected non-empty SmartMotion config")
@@ -38,10 +40,12 @@ func TestMotion(t *testing.T) {
 	})
 
 	t.Run("GetLAEConfig", func(t *testing.T) {
+		if !hasLAEConfig {
+			t.Skip("camera does not support LAEConfig config")
+		}
 		cfg, err := c.Motion.GetLAEConfig(ctx)
 		if err != nil {
-			t.Logf("GetLAEConfig not available: %v", err)
-			return
+			t.Fatalf("GetLAEConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("LAE.%s = %s", k, v)

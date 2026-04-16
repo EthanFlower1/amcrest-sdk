@@ -11,10 +11,12 @@ func TestPeripheral(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("GetCoaxialIOStatus", func(t *testing.T) {
+		if !hasCoaxialIO {
+			t.Skip("camera does not support CoaxialIO")
+		}
 		status, err := c.Peripheral.GetCoaxialIOStatus(ctx, 0)
 		if err != nil {
-			t.Logf("GetCoaxialIOStatus not available: %v", err)
-			return
+			t.Fatalf("GetCoaxialIOStatus: %v", err)
 		}
 		for k, v := range status {
 			t.Logf("CoaxialIO.%s = %s", k, v)
@@ -22,10 +24,12 @@ func TestPeripheral(t *testing.T) {
 	})
 
 	t.Run("GetFlashlightConfig", func(t *testing.T) {
+		if !hasFlashlight {
+			t.Skip("camera does not support FlashLight config")
+		}
 		cfg, err := c.Peripheral.GetFlashlightConfig(ctx)
 		if err != nil {
-			t.Logf("GetFlashlightConfig not available: %v", err)
-			return
+			t.Fatalf("GetFlashlightConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("Flashlight.%s = %s", k, v)
@@ -44,10 +48,12 @@ func TestPeripheral(t *testing.T) {
 	})
 
 	t.Run("GetFishEyeConfig", func(t *testing.T) {
+		if !hasFishEye {
+			t.Skip("camera does not support FishEye config")
+		}
 		cfg, err := c.Peripheral.GetFishEyeConfig(ctx)
 		if err != nil {
-			t.Logf("GetFishEyeConfig not available: %v", err)
-			return
+			t.Fatalf("GetFishEyeConfig: %v", err)
 		}
 		for k, v := range cfg {
 			t.Logf("FishEye.%s = %s", k, v)

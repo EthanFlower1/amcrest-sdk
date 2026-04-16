@@ -39,10 +39,12 @@ func TestSnapshot(t *testing.T) {
 	})
 
 	t.Run("GetWithType", func(t *testing.T) {
+		if !hasSnapWithType {
+			t.Skip("camera does not support snapshot GetWithType")
+		}
 		data, err := c.Snapshot.GetWithType(ctx, 1, 0)
 		if err != nil {
-			t.Logf("GetWithType not available: %v", err)
-			return
+			t.Fatalf("GetWithType: %v", err)
 		}
 		if len(data) == 0 {
 			t.Fatal("expected non-empty snapshot data")
