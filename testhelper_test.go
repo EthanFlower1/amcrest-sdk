@@ -48,6 +48,41 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
+// testClient2 returns a client for the second camera, or nil if not configured.
+func testClient2(t *testing.T) *Client {
+	t.Helper()
+	loadEnv()
+	host := os.Getenv("AMCREST_HOST_2")
+	user := os.Getenv("AMCREST_USERNAME_2")
+	pass := os.Getenv("AMCREST_PASSWORD_2")
+	if host == "" || user == "" || pass == "" {
+		return nil
+	}
+	client, err := NewClient(host, user, pass)
+	if err != nil {
+		t.Logf("Could not connect to second camera at %s: %v", host, err)
+		return nil
+	}
+	return client
+}
+
+// testClientWithFeature returns a client that supports the given feature.
+// It tries the primary camera first, then the secondary. Skips if neither supports it.
+func testClientWithFeature(t *testing.T, feature string, probe func(*Client) bool) *Client {
+	t.Helper()
+	c1 := testClient(t)
+	if probe(c1) {
+		return c1
+	}
+	c2 := testClient2(t)
+	if c2 != nil && probe(c2) {
+		t.Logf("Using second camera for %s", feature)
+		return c2
+	}
+	t.Skipf("no available camera supports %s", feature)
+	return nil
+}
+
 // probeConfig checks whether a named config exists on this camera.
 // Returns true if getRawConfig succeeds (HTTP 200), false on any error.
 func probeConfig(ctx context.Context, c *Client, name string) bool {
@@ -411,17 +446,18 @@ func requireCapability(t *testing.T, supported bool, name string) {
 	}
 }
 
-// skipOnSetError skips the test if the error indicates the camera does not
-// support this setter (HTTP 501 Not Implemented or 400 Bad Request).
-// Returns false if there was no error; fatals if the error is unexpected.
+// skipOnSetError skips the test if the error is HTTP 501 (Not Implemented),
+// which means the camera firmware doesn't support this setter via HTTP API.
+// HTTP 400 is treated as a real failure (likely wrong parameters = SDK bug).
+// Returns false if there was no error; fatals on unexpected errors.
 func skipOnSetError(t *testing.T, err error, label string) bool {
 	t.Helper()
 	if err == nil {
 		return false
 	}
 	var apiErr *APIError
-	if errors.As(err, &apiErr) && (apiErr.StatusCode == 501 || apiErr.StatusCode == 400) {
-		t.Skipf("%s not supported on this device (HTTP %d)", label, apiErr.StatusCode)
+	if errors.As(err, &apiErr) && apiErr.StatusCode == 501 {
+		t.Skipf("%s not implemented on this device firmware (HTTP 501)", label)
 	}
 	t.Fatalf("%s: %v", label, err)
 	return true // unreachable
