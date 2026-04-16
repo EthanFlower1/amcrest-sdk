@@ -135,3 +135,82 @@ func (s *TrafficService) ManualSnap(ctx context.Context, channel int) error {
 		"channel": {fmt.Sprintf("%d", channel)},
 	})
 }
+
+// StartRecordFind starts a paginated record search for the given list name.
+// Returns the raw response containing the search token.
+// CGI: recordFinder.cgi?action=startFind&name=X
+func (s *TrafficService) StartRecordFind(ctx context.Context, name string, params map[string]string) (string, error) {
+	qv := url.Values{
+		"name": {name},
+	}
+	for k, v := range params {
+		qv.Set(k, v)
+	}
+	return s.client.cgiGet(ctx, "recordFinder.cgi", "startFind", qv)
+}
+
+// DoRecordFind retrieves a page of record search results using the given token.
+// CGI: recordFinder.cgi?action=doFind&token=T&count=N
+func (s *TrafficService) DoRecordFind(ctx context.Context, token string, count int) (string, error) {
+	return s.client.cgiGet(ctx, "recordFinder.cgi", "doFind", url.Values{
+		"token": {token},
+		"count": {fmt.Sprintf("%d", count)},
+	})
+}
+
+// StopRecordFind stops a paginated record search and releases the token.
+// CGI: recordFinder.cgi?action=stopFind&token=T
+func (s *TrafficService) StopRecordFind(ctx context.Context, token string) error {
+	return s.client.cgiAction(ctx, "recordFinder.cgi", "stopFind", url.Values{
+		"token": {token},
+	})
+}
+
+// GetRecordCount returns the total number of records for the given list name.
+// CGI: recordFinder.cgi?action=getQuerySize&name=X
+func (s *TrafficService) GetRecordCount(ctx context.Context, name string) (int, error) {
+	body, err := s.client.cgiGet(ctx, "recordFinder.cgi", "getQuerySize", url.Values{
+		"name": {name},
+	})
+	if err != nil {
+		return 0, fmt.Errorf("traffic GetRecordCount: %w", err)
+	}
+	kv := parseKV(body)
+	count := 0
+	if v, ok := kv["count"]; ok {
+		fmt.Sscanf(v, "%d", &count)
+	}
+	return count, nil
+}
+
+// CloseStrobe closes the traffic strobe light on the specified channel.
+// CGI: trafficSnap.cgi?action=closeStrobe&channel=N
+func (s *TrafficService) CloseStrobe(ctx context.Context, channel int) error {
+	return s.client.cgiAction(ctx, "trafficSnap.cgi", "closeStrobe", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	})
+}
+
+// GetExportPercent returns the current file export progress.
+// CGI: trafficRecord.cgi?action=getFileExportState
+func (s *TrafficService) GetExportPercent(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "trafficRecord.cgi", "getFileExportState", nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// GetTrafficSnapConfig retrieves the TrafficSnap configuration table without
+// stripping key prefixes.
+// CGI: configManager.cgi?action=getConfig&name=TrafficSnap
+func (s *TrafficService) GetTrafficSnapConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "TrafficSnap")
+}
+
+// SetTrafficSnapConfig updates TrafficSnap configuration values. Keys should be
+// prefixed with "TrafficSnap." (e.g., "TrafficSnap.SnapMode").
+// CGI: configManager.cgi?action=setConfig
+func (s *TrafficService) SetTrafficSnapConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}

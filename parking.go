@@ -95,3 +95,31 @@ func (s *ParkingService) SetOverLineState(ctx context.Context, channel, spaceNo 
 		"enable":  {strconv.FormatBool(enable)},
 	})
 }
+
+// GetRemainSpace retrieves the remaining parking space count for the given
+// channel via a JSON POST to /cgi-bin/api/TrafficParking/getRemainSpace. The
+// raw JSON response body is returned as a string.
+// PDF 10.5: POST /cgi-bin/api/TrafficParking/getRemainSpace
+func (s *ParkingService) GetRemainSpace(ctx context.Context, channel int) (string, error) {
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+	resp, err := s.client.postRaw(ctx, "/cgi-bin/api/TrafficParking/getRemainSpace", body)
+	if err != nil {
+		return "", fmt.Errorf("ParkingService.GetRemainSpace: %w", err)
+	}
+	return resp, nil
+}
+
+// GetSpaceNo retrieves the space number information for the given channel.
+// Additional query parameters can be passed via params.
+// CGI: trafficParking.cgi?action=getSpaceNo&channel=N
+func (s *ParkingService) GetSpaceNo(ctx context.Context, channel int, params map[string]string) (string, error) {
+	v := url.Values{
+		"channel": {strconv.Itoa(channel)},
+	}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiGet(ctx, "trafficParking.cgi", "getSpaceNo", v)
+}

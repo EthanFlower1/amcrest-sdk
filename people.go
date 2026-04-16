@@ -105,3 +105,55 @@ func (s *PeopleService) GetCurrentCrowdStat(ctx context.Context, body interface{
 	}
 	return resp, nil
 }
+
+// GetVideoWidgetNumberStat retrieves the VideoWidgetNumberStat configuration
+// table without stripping key prefixes.
+// PDF 9.3.6: configManager.cgi?action=getConfig&name=VideoWidgetNumberStat
+func (s *PeopleService) GetVideoWidgetNumberStat(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "VideoWidgetNumberStat")
+}
+
+// SetVideoWidgetNumberStat updates VideoWidgetNumberStat configuration values.
+// Keys should be prefixed with "VideoWidgetNumberStat." (e.g.,
+// "VideoWidgetNumberStat.Enable").
+// PDF 9.3.6: configManager.cgi?action=setConfig
+func (s *PeopleService) SetVideoWidgetNumberStat(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// ClearSectionStat clears the section statistics for the given channel and area.
+// PDF 9.3.5: POST /cgi-bin/api/VideoStatServer/clearSectionStat
+func (s *PeopleService) ClearSectionStat(ctx context.Context, channel, areaID int) error {
+	reqBody := map[string]int{"channel": channel, "areaID": areaID}
+	return s.client.postJSON(ctx, "/cgi-bin/api/VideoStatServer/clearSectionStat", reqBody, nil)
+}
+
+// SubscribeRealTrace subscribes to real-time people trace data.
+// PDF 9.4.3: POST /cgi-bin/api/VideoStatServer/attachRealTraceProc
+func (s *PeopleService) SubscribeRealTrace(ctx context.Context, body interface{}) (string, error) {
+	resp, err := s.client.postRaw(ctx, "/cgi-bin/api/VideoStatServer/attachRealTraceProc", body)
+	if err != nil {
+		return "", fmt.Errorf("PeopleService.SubscribeRealTrace: %w", err)
+	}
+	return resp, nil
+}
+
+// GetHistoryTrace retrieves historical people trace data.
+// PDF 9.4.4: POST /cgi-bin/api/VideoStatServer/getHistoryTrace
+func (s *PeopleService) GetHistoryTrace(ctx context.Context, body interface{}) (string, error) {
+	resp, err := s.client.postRaw(ctx, "/cgi-bin/api/VideoStatServer/getHistoryTrace", body)
+	if err != nil {
+		return "", fmt.Errorf("PeopleService.GetHistoryTrace: %w", err)
+	}
+	return resp, nil
+}
+
+// SubscribeCrowdStat subscribes to real-time crowd distribution statistics.
+// PDF 9.5.2: POST /cgi-bin/api/CrowdDistriMap/subscribeStat
+func (s *PeopleService) SubscribeCrowdStat(ctx context.Context, body interface{}) (string, error) {
+	resp, err := s.client.postRaw(ctx, "/cgi-bin/api/CrowdDistriMap/subscribeStat", body)
+	if err != nil {
+		return "", fmt.Errorf("PeopleService.SubscribeCrowdStat: %w", err)
+	}
+	return resp, nil
+}

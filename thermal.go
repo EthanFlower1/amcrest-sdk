@@ -237,3 +237,134 @@ func (s *ThermalService) SetEnvironmentTemp(ctx context.Context, temp int) error
 		"EnvironmentTemp": {fmt.Sprintf("%d", temp)},
 	})
 }
+
+// SetPresetModeInfo updates preset mode parameters via
+// ThermographyManager.cgi?action=setPresetParam.
+func (s *ThermalService) SetPresetModeInfo(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "ThermographyManager.cgi", "setPresetParam", v)
+}
+
+// SetExternSystemInfo updates external system information via
+// ThermographyManager.cgi?action=setExternSystemInfo.
+func (s *ThermalService) SetExternSystemInfo(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "ThermographyManager.cgi", "setExternSystemInfo", v)
+}
+
+// GetTemperCorrection retrieves the current temperature correction parameters
+// via TemperCorrection.cgi?action=getCorrection. Returns parsed key-value pairs.
+func (s *ThermalService) GetTemperCorrection(ctx context.Context) (map[string]string, error) {
+	body, err := s.client.cgiGet(ctx, "TemperCorrection.cgi", "getCorrection", nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseKV(body), nil
+}
+
+// SetTemperCorrection updates temperature correction parameters via
+// TemperCorrection.cgi?action=setCorrection.
+func (s *ThermalService) SetTemperCorrection(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "TemperCorrection.cgi", "setCorrection", v)
+}
+
+// GetEnvironmentTemp retrieves the current environment temperature reading via
+// TemperCustom.cgi?action=getEnvTemp. Returns the temperature as an integer.
+func (s *ThermalService) GetEnvironmentTemp(ctx context.Context) (int, error) {
+	body, err := s.client.cgiGet(ctx, "TemperCustom.cgi", "getEnvTemp", nil)
+	if err != nil {
+		return 0, fmt.Errorf("thermal GetEnvironmentTemp: %w", err)
+	}
+	kv := parseKV(body)
+	temp := 0
+	if v, ok := kv["EnvironmentTemp"]; ok {
+		fmt.Sscanf(v, "%d", &temp)
+	}
+	return temp, nil
+}
+
+// GetColorBar retrieves the color bar settings for the given channel via
+// RadiometryManager.cgi?action=getColorBar.
+func (s *ThermalService) GetColorBar(ctx context.Context, channel int) (string, error) {
+	return s.client.cgiGet(ctx, "RadiometryManager.cgi", "getColorBar", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	})
+}
+
+// SetColorBar updates the color bar settings via
+// RadiometryManager.cgi?action=setColorBar.
+func (s *ThermalService) SetColorBar(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "RadiometryManager.cgi", "setColorBar", v)
+}
+
+// SubscribeTemperature subscribes to real-time temperature data on the given
+// channel. This is a long-lived connection.
+// PDF 11.2.8: RadiometryManager.cgi?action=attachTemper&channel=N
+func (s *ThermalService) SubscribeTemperature(ctx context.Context, channel int) (string, error) {
+	return s.client.cgiGet(ctx, "RadiometryManager.cgi", "attachTemper", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	})
+}
+
+// SubscribeRadiometryData subscribes to real-time radiometry data on the given
+// channel. This is a long-lived connection.
+// PDF 11.2.9: RadiometryManager.cgi?action=attachProc&channel=N
+func (s *ThermalService) SubscribeRadiometryData(ctx context.Context, channel int) (string, error) {
+	return s.client.cgiGet(ctx, "RadiometryManager.cgi", "attachProc", url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	})
+}
+
+// FetchRadiometryData fetches a batch of radiometry data for the given channel.
+// Returns raw binary data.
+// PDF 11.2.10: RadiometryManager.cgi?action=toFetch&channel=N
+func (s *ThermalService) FetchRadiometryData(ctx context.Context, channel int) ([]byte, error) {
+	params := url.Values{
+		"action":  {"toFetch"},
+		"channel": {fmt.Sprintf("%d", channel)},
+	}
+
+	resp, err := s.client.get(ctx, "/cgi-bin/RadiometryManager.cgi", params)
+	if err != nil {
+		return nil, fmt.Errorf("thermal FetchRadiometryData: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, &APIError{StatusCode: resp.StatusCode}
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("thermal FetchRadiometryData: reading body: %w", err)
+	}
+	return data, nil
+}
+
+// FixFocus performs a thermal focus fix via
+// ThermographyManager.cgi?action=fixFocus.
+// PDF 11.1.7
+func (s *ThermalService) FixFocus(ctx context.Context) error {
+	return s.client.cgiAction(ctx, "ThermographyManager.cgi", "fixFocus", nil)
+}
+
+// GetOptimizedRegion retrieves the optimized region settings via
+// ThermographyManager.cgi?action=getOptimizedRegion.
+// PDF 11.1.5
+func (s *ThermalService) GetOptimizedRegion(ctx context.Context) (string, error) {
+	return s.client.cgiGet(ctx, "ThermographyManager.cgi", "getOptimizedRegion", nil)
+}
