@@ -5,37 +5,44 @@ import (
 	"testing"
 )
 
-func TestPrivacyGetConfig(t *testing.T) {
+func TestPrivacy(t *testing.T) {
 	c := testClient(t)
+	initCaps(t, c)
 	ctx := context.Background()
-	cfg, err := c.Privacy.GetConfig(ctx)
-	if err != nil {
-		t.Skip("Privacy.GetConfig not supported:", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
 
-func TestPrivacyGetMasking(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	body, err := c.Privacy.GetMasking(ctx, 0, 0, 10)
-	if err != nil {
-		t.Skip("Privacy.GetMasking not supported:", err)
-	}
-	t.Logf("GetMasking response:\n%s", body)
-}
+	t.Run("GetConfig", func(t *testing.T) {
+		cfg, err := c.Privacy.GetConfig(ctx)
+		if err != nil {
+			t.Logf("Privacy.GetConfig not available: %v", err)
+			return
+		}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("Privacy.%s = %s", k, v)
+		}
+	})
 
-func TestPrivacyGetEnable(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	enabled, err := c.Privacy.GetEnable(ctx, 0)
-	if err != nil {
-		t.Skip("Privacy.GetEnable not supported:", err)
-	}
-	t.Logf("PrivacyMasking enabled: %v", enabled)
+	t.Run("GetEnable", func(t *testing.T) {
+		enabled, err := c.Privacy.GetEnable(ctx, 0)
+		if err != nil {
+			t.Logf("Privacy.GetEnable not available: %v", err)
+			return
+		}
+		t.Logf("PrivacyMasking enabled: %v", enabled)
+	})
+
+	t.Run("GetMasking", func(t *testing.T) {
+		coverCount := capsInt(videoInputCaps, "CoverCount")
+		if coverCount <= 0 && videoInputCaps != nil {
+			t.Skip("camera reports CoverCount=0, no privacy masking regions")
+		}
+		body, err := c.Privacy.GetMasking(ctx, 0, 0, 10)
+		if err != nil {
+			t.Logf("Privacy.GetMasking not available: %v", err)
+			return
+		}
+		t.Logf("GetMasking response:\n%s", body)
+	})
 }

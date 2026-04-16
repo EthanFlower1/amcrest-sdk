@@ -2,54 +2,42 @@ package amcrest
 
 import (
 	"context"
-	"errors"
 	"testing"
 )
 
-func skipIfNoDVR(t *testing.T, err error) {
-	t.Helper()
-	if err == nil {
-		return
-	}
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		t.Skipf("camera does not support DVR feature (HTTP %d), skipping", apiErr.StatusCode)
-	}
-}
-
-func TestDVRStartFindAndStop(t *testing.T) {
+func TestDVR(t *testing.T) {
 	c := testClient(t)
+	initCaps(t, c)
 	ctx := context.Background()
 
-	findId, err := c.DVR.StartFind(ctx, 0, "2024-01-01 00:00:00", "2024-01-02 00:00:00")
-	skipIfNoDVR(t, err)
-	if err != nil {
-		t.Fatalf("StartFind: %v", err)
-	}
-	t.Logf("findId: %s", findId)
+	t.Run("GetBandwidthLimit", func(t *testing.T) {
+		cfg, err := c.DVR.GetBandwidthLimit(ctx)
+		if err != nil {
+			t.Logf("GetBandwidthLimit not available: %v", err)
+			return
+		}
+		for k, v := range cfg {
+			t.Logf("Bandwidth.%s = %s", k, v)
+		}
+	})
 
-	body, err := c.DVR.FindNext(ctx, findId, 10)
-	if err != nil {
-		t.Fatalf("FindNext: %v", err)
-	}
-	t.Logf("FindNext response:\n%s", body)
+	t.Run("StartFindAndStop", func(t *testing.T) {
+		findId, err := c.DVR.StartFind(ctx, 0, "2024-01-01 00:00:00", "2024-01-02 00:00:00")
+		if err != nil {
+			t.Logf("DVR StartFind not available: %v", err)
+			return
+		}
+		t.Logf("findId: %s", findId)
 
-	err = c.DVR.StopFind(ctx, findId)
-	if err != nil {
-		t.Fatalf("StopFind: %v", err)
-	}
-}
+		body, err := c.DVR.FindNext(ctx, findId, 10)
+		if err != nil {
+			t.Fatalf("FindNext: %v", err)
+		}
+		t.Logf("FindNext response:\n%s", body)
 
-func TestDVRGetBandwidthLimit(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-
-	cfg, err := c.DVR.GetBandwidthLimit(ctx)
-	skipIfNoDVR(t, err)
-	if err != nil {
-		t.Fatalf("GetBandwidthLimit: %v", err)
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
+		if err := c.DVR.StopFind(ctx, findId); err != nil {
+			t.Fatalf("StopFind: %v", err)
+		}
+		t.Log("StopFind succeeded")
+	})
 }

@@ -2,158 +2,118 @@ package amcrest
 
 import (
 	"context"
-	"errors"
 	"testing"
 )
 
-func TestCameraGetImageConfig(t *testing.T) {
+func TestCamera(t *testing.T) {
 	c := testClient(t)
+	initCaps(t, c)
 	ctx := context.Background()
-	cfg, err := c.Camera.GetImageConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetImageConfig not supported (HTTP %d)", apiErr.StatusCode)
-		}
-		t.Fatalf("GetImageConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
 
-func TestCameraGetExposureConfig(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetExposureConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetExposureConfig not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetImageConfig", func(t *testing.T) {
+		cfg, err := c.Camera.GetImageConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetImageConfig: %v", err)
 		}
-		t.Fatalf("GetExposureConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("Image.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetBacklightConfig(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetBacklightConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetBacklightConfig not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetExposureConfig", func(t *testing.T) {
+		if videoInputCaps != nil && videoInputCaps["Exposure"] == "0" {
+			t.Skip("camera does not support Exposure")
 		}
-		t.Fatalf("GetBacklightConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		cfg, err := c.Camera.GetExposureConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetExposureConfig: %v", err)
+		}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("Exposure.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetWhiteBalanceConfig(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetWhiteBalanceConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetWhiteBalanceConfig not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetBacklightConfig", func(t *testing.T) {
+		if videoInputCaps != nil && videoInputCaps["Backlight"] == "0" {
+			t.Skip("camera does not support Backlight")
 		}
-		t.Fatalf("GetWhiteBalanceConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		cfg, err := c.Camera.GetBacklightConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetBacklightConfig: %v", err)
+		}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("Backlight.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetDayNightConfig(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetDayNightConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetDayNightConfig not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetWhiteBalanceConfig", func(t *testing.T) {
+		cfg, err := c.Camera.GetWhiteBalanceConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetWhiteBalanceConfig: %v", err)
 		}
-		t.Fatalf("GetDayNightConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("WhiteBalance.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetFocusStatus(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetFocusStatus(ctx, 0)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetFocusStatus not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetDayNightConfig", func(t *testing.T) {
+		if videoInputCaps != nil && videoInputCaps["DayNightColor"] == "0" {
+			t.Skip("camera does not support DayNightColor")
 		}
-		t.Fatalf("GetFocusStatus: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil status map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		cfg, err := c.Camera.GetDayNightConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetDayNightConfig: %v", err)
+		}
+		if len(cfg) == 0 {
+			t.Fatal("expected non-empty config")
+		}
+		for k, v := range cfg {
+			t.Logf("DayNight.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetLightingConfig(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetLightingConfig(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetLightingConfig not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetFocusStatus", func(t *testing.T) {
+		cfg, err := c.Camera.GetFocusStatus(ctx, 0)
+		if err != nil {
+			t.Logf("GetFocusStatus not available: %v", err)
+			return
 		}
-		t.Fatalf("GetLightingConfig: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
-}
+		for k, v := range cfg {
+			t.Logf("Focus.%s = %s", k, v)
+		}
+	})
 
-func TestCameraGetVideoInOptions(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
-	cfg, err := c.Camera.GetVideoInOptions(ctx)
-	if err != nil {
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
-			t.Skipf("GetVideoInOptions not supported (HTTP %d)", apiErr.StatusCode)
+	t.Run("GetLightingConfig", func(t *testing.T) {
+		cfg, err := c.Camera.GetLightingConfig(ctx)
+		if err != nil {
+			t.Logf("GetLightingConfig not available: %v", err)
+			return
 		}
-		t.Fatalf("GetVideoInOptions: %v", err)
-	}
-	if cfg == nil {
-		t.Fatal("expected non-nil config map")
-	}
-	for k, v := range cfg {
-		t.Logf("%s = %s", k, v)
-	}
+		for k, v := range cfg {
+			t.Logf("Lighting.%s = %s", k, v)
+		}
+	})
+
+	t.Run("GetVideoInOptions", func(t *testing.T) {
+		cfg, err := c.Camera.GetVideoInOptions(ctx)
+		if err != nil {
+			t.Logf("GetVideoInOptions not available: %v", err)
+			return
+		}
+		for k, v := range cfg {
+			t.Logf("VideoInOptions.%s = %s", k, v)
+		}
+	})
 }

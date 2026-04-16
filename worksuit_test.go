@@ -5,26 +5,26 @@ import (
 	"testing"
 )
 
-func TestWorkSuitFindGroup(t *testing.T) {
+func TestWorkSuit(t *testing.T) {
 	c := testClient(t)
+	initCaps(t, c)
 	ctx := context.Background()
 
-	body, err := c.WorkSuit.FindGroup(ctx)
-	if err != nil {
-		skipIfUnsupported(t, err)
-		t.Fatalf("FindGroup: %v", err)
-	}
-	t.Logf("FindGroup response:\n%s", body)
-}
+	requireCapability(t, hasWorkSuit, "WorkSuit Detection")
 
-func TestWorkSuitGetGroup(t *testing.T) {
-	c := testClient(t)
-	ctx := context.Background()
+	t.Run("FindGroup", func(t *testing.T) {
+		body, err := c.WorkSuit.FindGroup(ctx)
+		if err != nil {
+			t.Fatalf("FindGroup: %v", err)
+		}
+		t.Logf("FindGroup response:\n%s", body)
+	})
 
-	body, err := c.WorkSuit.GetGroup(ctx, 0)
-	if err != nil {
-		skipIfUnsupported(t, err)
-		t.Fatalf("GetGroup: %v", err)
-	}
-	t.Logf("GetGroup(0) response:\n%s", body)
+	t.Run("GetGroup", func(t *testing.T) {
+		body, err := c.WorkSuit.GetGroup(ctx, 0)
+		if err != nil {
+			t.Fatalf("GetGroup: %v", err)
+		}
+		t.Logf("GetGroup(0) response:\n%s", body)
+	})
 }
