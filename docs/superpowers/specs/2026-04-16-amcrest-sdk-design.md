@@ -77,47 +77,51 @@ All files in root package `amcrest`. No subpackages.
 
 ### Core Infrastructure (6 files)
 
+PDF reference for protocol/auth/format: `docs/HTTP_API_V3.26.pdf` pp. 23-31 (Sections 1-3: Overview, References, Definitions, Authentication, Conventions)
+
 | File | Purpose |
 |------|---------|
 | `amcrest.go` | Client struct, NewClient(), Option funcs, service init |
-| `auth.go` | Digest auth round-tripper (RFC 7616) |
-| `parse.go` | Key-value response parser with struct tags |
-| `config.go` | Generic configManager.cgi get/set helpers |
-| `stream.go` | Multipart stream reader for events/audio/snapshots |
-| `errors.go` | APIError type and error handling |
+| `auth.go` | Digest auth round-tripper (RFC 7616) -- see PDF pp. 30-31 (Section 3.4 Authentication) |
+| `parse.go` | Key-value response parser with struct tags -- see PDF pp. 26-27 (Section 3.3.1 key=value format) |
+| `config.go` | Generic configManager.cgi get/set helpers -- see PDF pp. 35-38 (Section 4.2 Configure Manager) |
+| `stream.go` | Multipart stream reader for events/audio/snapshots -- see PDF pp. 171-173 (Section 4.9.17 Subscribe to Event Message) |
+| `errors.go` | APIError type and error handling -- see PDF pp. 27-29 (Section 3.3 error response formats) |
 
 ### Service Files (25 files)
 
-| File | Service | API Chapters | Description |
-|------|---------|-------------|-------------|
-| `system.go` | SystemService | 4.6 | Device info, time, reboot, version, language, auto-maintain |
-| `users.go` | UserService | 4.7 | User/group CRUD, passwords, auth policy, export |
-| `network.go` | NetworkService | 4.8 | Interfaces, DDNS, email, WiFi, NTP, UPnP, RTSP, PPPoE, SSHD, cellular |
-| `video.go` | VideoService | 4.5 | Encode config/caps, video input/output, channel titles, widgets, smart encode, video standard |
-| `snapshot.go` | SnapshotService | 4.4 | Snap config, capture, subscribe to snapshot events |
-| `audio.go` | AudioService | 4.3 | Input/output channels, streaming, volume, audio analysis |
-| `ptz.go` | PTZService | 8.1 | Movement, presets, tours, scans, patterns, electronic PTZ, view range |
-| `events.go` | EventService | 4.9 | Subscribe, alarm in/out config, blind/loss detect, event caps, net alarm |
-| `recording.go` | RecordingService | 4.10 | Record config/mode, media file search (basic + face/traffic/IVS/etc), download |
-| `logs.go` | LogService | 4.11 | Find, clear, backup, seek, export encrypted |
-| `storage.go` | StorageService | 6 | Disk info, format, NAS, storage groups/points, SD encrypt, health alarm |
-| `camera.go` | CameraService | 5 | Image settings, exposure, backlight, white balance, day/night, zoom/focus, lighting, video-in options |
-| `display.go` | DisplayService | 7 | GUI settings, split screen, monitor tour |
-| `privacy.go` | PrivacyService | 4.5.18-28 | Privacy masking CRUD, enable/disable, goto |
-| `motion.go` | MotionService | 4.5.25, 9.8 | Motion detection config, smart motion detection, SMD data search |
-| `upgrade.go` | UpgradeService | 4.12 | Firmware upload, upgrade by URL, cloud upgrade, state, cancel |
-| `upload.go` | UploadService | 4.13 | HTTP uploading config (picture, event, report data) |
-| `analytics.go` | AnalyticsService | 9.6 | Video analyse config, rules, capabilities, scene management, intelligent tour |
-| `face.go` | FaceService | 9.2 | Face groups, persons, recognition config, search by picture, database export/import |
-| `people.go` | PeopleService | 9.3, 9.4, 9.5 | People counting, heatmaps, crowd distribution, traces |
-| `worksuit.go` | WorkSuitService | 9.7 | Compliance library, workwear detection |
-| `traffic.go` | TrafficService | 10 | Traffic events, flow stats, record management, snap operations, vehicle distribution |
-| `parking.go` | ParkingService | 10.5 | Parking space status, light control, access filter, overline |
-| `thermal.go` | ThermalService | 11 | Thermography, radiometry, temperature measurement, fire warning, heat maps |
-| `accesscontrol.go` | AccessControlService | 12 | Door control, status, config, events, user accounts (V1 & V2), cards, fingerprints, faces, admin passwords |
-| `building.go` | BuildingService | 13 | Video talk, SIP, room numbers, elevator |
-| `dvr.go` | DVRService | 14 | File finder, record protection, bandwidth, file transfer |
-| `peripheral.go` | PeripheralService | 8.2-8.8, 15 | Wiper, illuminator, flashlight, coaxial IO, PIR, SCADA, gyro, GPS, lens, fisheye, radar, water quality, advertisement |
+PDF reference: `docs/HTTP_API_V3.26.pdf`
+
+| File | Service | API Chapters | PDF Pages | Description |
+|------|---------|-------------|-----------|-------------|
+| `system.go` | SystemService | 4.6 | pp. 108-128 | Device info, time, reboot, version, language, auto-maintain |
+| `users.go` | UserService | 4.7 | pp. 129-137 | User/group CRUD, passwords, auth policy, export |
+| `network.go` | NetworkService | 4.8 | pp. 138-156 | Interfaces, DDNS, email, WiFi, NTP, UPnP, RTSP, PPPoE, SSHD, cellular |
+| `video.go` | VideoService | 4.5 | pp. 71-93 | Encode config/caps, video input/output, channel titles, widgets, smart encode, video standard |
+| `snapshot.go` | SnapshotService | 4.4 | pp. 66-70 | Snap config, capture, subscribe to snapshot events |
+| `audio.go` | AudioService | 4.3 | pp. 39-65 | Input/output channels, streaming, volume, audio analysis |
+| `ptz.go` | PTZService | 8.1 | pp. 284-305 | Movement, presets, tours, scans, patterns, electronic PTZ, view range |
+| `events.go` | EventService | 4.9 | pp. 157-176 | Subscribe, alarm in/out config, blind/loss detect, event caps, net alarm |
+| `recording.go` | RecordingService | 4.10 | pp. 177-208 | Record config/mode, media file search (basic + face/traffic/IVS/etc), download |
+| `logs.go` | LogService | 4.11 | pp. 208-212 | Find, clear, backup, seek, export encrypted |
+| `storage.go` | StorageService | 6 | pp. 259-278 | Disk info, format, NAS, storage groups/points, SD encrypt, health alarm |
+| `camera.go` | CameraService | 5 | pp. 235-258 | Image settings, exposure, backlight, white balance, day/night, zoom/focus, lighting, video-in options |
+| `display.go` | DisplayService | 7 | pp. 279-283 | GUI settings, split screen, monitor tour |
+| `privacy.go` | PrivacyService | 4.5.18-28 | pp. 94-107 | Privacy masking CRUD, enable/disable, goto |
+| `motion.go` | MotionService | 4.5.25, 9.8 | pp. 99-107, 416-419 | Motion detection config, smart motion detection, SMD data search |
+| `upgrade.go` | UpgradeService | 4.12 | pp. 213-218 | Firmware upload, upgrade by URL, cloud upgrade, state, cancel |
+| `upload.go` | UploadService | 4.13 | pp. 219-234 | HTTP uploading config (picture, event, report data) |
+| `analytics.go` | AnalyticsService | 9.6 | pp. 381-401 | Video analyse config, rules, capabilities, scene management, intelligent tour |
+| `face.go` | FaceService | 9.2 | pp. 334-361 | Face groups, persons, recognition config, search by picture, database export/import |
+| `people.go` | PeopleService | 9.3, 9.4, 9.5 | pp. 362-381 | People counting, heatmaps, crowd distribution, traces |
+| `worksuit.go` | WorkSuitService | 9.7 | pp. 402-416 | Compliance library, workwear detection |
+| `traffic.go` | TrafficService | 10 | pp. 440-466 | Traffic events, flow stats, record management, snap operations, vehicle distribution |
+| `parking.go` | ParkingService | 10.5 | pp. 460-465 | Parking space status, light control, access filter, overline |
+| `thermal.go` | ThermalService | 11 | pp. 481-504 | Thermography, radiometry, temperature measurement, fire warning, heat maps |
+| `accesscontrol.go` | AccessControlService | 12 | pp. 505-584 | Door control, status, config, events, user accounts (V1 & V2), cards, fingerprints, faces, admin passwords |
+| `building.go` | BuildingService | 13 | pp. 585-608 | Video talk, SIP, room numbers, elevator |
+| `dvr.go` | DVRService | 14 | pp. 609-617 | File finder, record protection, bandwidth, file transfer |
+| `peripheral.go` | PeripheralService | 8.2-8.8, 15 | pp. 305-325, 618-650 | Wiper, illuminator, flashlight, coaxial IO, PIR, SCADA, gyro, GPS, lens, fisheye, radar, water quality, advertisement |
 
 ## Client API
 
