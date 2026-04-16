@@ -1,0 +1,3353 @@
+ChannelNo: the display screen No. Start from 1 and <= 2.
+⚫
+
+Set split screen mode
+Table 7-4
+
+Syntax
+
+http://<server>/cgi-bin/split.cgi?action=setMode&channel=<ChannelNo>&mode=<mo
+de>&group=<group>
+
+Method
+
+GET
+
+Description
+
+Set the split screen mode.
+
+Example
+
+http://192.168.1.108/cgi-bin/split.cgi?action=setMode&channel=1&mode=split4&group
+=1
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ChannelNo: the display screen No. Start from 1.
+mode:enum{split1,split2,split4,split6,split8,split9,split12,split16,split20,split25,split36,sp
+lit64,split144,pip1,pip3, "Free", "CompositeSplit1" / "FitDisplayUnit1", "CompositeSplit1"
+/ "FitDisplayUnit4"};
+group: the No. of a group which contains certain number channels. For example, if 16
+video channels display in split4 Mode which contains 4 video channels on Screen, then
+there are 4 groups and each group contains 4 video channels.
+
+7.3 Moniter Tour
+7.3.1 [Config] Moniter Tour
+⚫
+
+Get moniter tour config
+Table 7-5
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=getConfig&name=MonitorTour
+
+Method
+
+GET
+
+Description
+
+Get monitor tour config.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=getConfig&name=MonitorTour
+
+Success
+Return
+
+table.MonitorTour[ch].Enable=128
+table.MonitorTour[ch].Interval=true
+table.MonitorTour[ch].Mask.Split1=0,1,5
+table.MonitorTour[ch].Mask.Split8=0,1,5
+table.MonitorTour[ch].Collections=Favortite1, Favortite2…
+
+Comment
+
+—
+
+⚫
+
+Set moniter tour config
+Table 7-6
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&<paramName>=<paramV
+alue>[&<paramName>=<paramValue>…]
+
+Method
+
+GET
+
+Display APIs 281
+
+Description
+Example
+
+Set monitor tour config.
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&MonitorTour[0].Enabl
+e=true
+
+Success
+Return
+
+OK.
+
+Comment
+
+Parameters in URL:
+The paramName and paramValue are in the table below.
+
+Appendix:
+ParamName
+
+ParamValue type
+
+Description
+
+MonitorTour[ch].Enable
+
+bool
+
+MonitorTour or not.
+
+MonitorTour[ch].Interval
+
+integer
+
+MonitorTour interval.
+
+MonitorTour[ch].Mask.Split1
+MonitorTour[ch].Mask.Split8
+
+—
+
+Channel array for split1
+Channel array for split8
+
+MonitorTour[ch].Collections
+
+—
+—
+
+Split collections
+
+7.3.2 Enable Tour
+Table 7-7
+Syntax
+
+http://<server>/cgi-bin/split.cgi?action=enableTour&channel=<ChannelNo>&enable=<fl
+ag>
+
+Method
+
+GET
+
+Description
+
+Enable tour in every video channel on a screen or not.
+
+Example
+
+http://192.168.1.108/cgi-bin/split.cgi?action=enableTour&channel=1&enable=true
+
+Success
+Return
+
+OK
+
+Comment
+
+ChannelNo: the display screen No. Start from 1 and <= 2.
+flag : true or false
+
+7.3.3 [Config] Monitor Collection
+⚫
+
+Get monitor collection config
+Table 7-8
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=getConfig&name=MonitorCollection
+
+Method
+
+GET
+
+Description
+
+Get monitor collection config.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=getConfig&name=MonitorCollec
+tion
+
+Success
+Return
+
+table.MonitorCollection.collectionname. Mode=Split1
+table.MonitorCollection.collectionname.Windows[winno].Enable= true
+table.MonitorCollection.collectionname.Windows[winno].Device=device1
+table.MonitorCollection.collectionname.Windows[winno].VideoChannel=5
+table.MonitorCollection.collectionname.Windows[winno].VideoStream=Main
+table.MonitorCollection.collectionname.Windows[winno].AudioChannel=5
+
+Display APIs 282
+
+table.MonitorCollection.collectionname.Windows[winno].AudioStream=Main
+…
+Comment
+
+⚫
+
+Parameters in Response :
+winno : integer, the array index which equals to the window index in a screen and starts
+from 0.
+
+Set monitor collection config
+Table 7-9
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&<paramName>=<paramV
+alue>[&<paramName>=<paramValue>…]
+
+Method
+Description
+
+GET
+Set monitor collection config.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&MonitorCollection.Fa
+vorite1.Mode=split4&MonitorCollection.Favorite1.Windows[1].Enable=true&MonitorColl
+ection.Favorite1.Windows[1].VideoChannel=2
+
+Success
+Return
+
+OK
+Parameters in URL:
+
+Comment
+
+The paramName and paramValue are in the table below.
+In table below:
+Collect=MonitorCollection.collectionname.
+collectionname: can be any name.
+winno: integer, the array index which equals to the window index in a screen and starts
+from 0.
+
+Appendix:
+ParamName
+
+ParamValue type
+
+Description
+
+Collect.Mode
+
+string
+
+Collect.Windows[winno].Enable
+
+bool
+
+SetSplitMode.
+Enable the window or not.
+
+Collect.Windows[winno].Device
+
+string
+
+The device Id.
+
+Collect.Windows[winno].VideoChannel
+
+integer
+
+The video channel.
+
+Collect.Windows[winno].VideoStream
+
+string
+
+The range is {"Main", "Extra1",
+"Extra2", "Extra3", "Auto"}.
+
+Collect.Windows[winno].AudioChannel
+
+integer
+
+The audio channel.
+
+Collect.Windows[winno].AudioStream
+
+string
+
+The range is {"Main", "Extra1",
+"Extra2", "Extra3", "Auto"}.
+
+The
+
+range
+
+is
+
+the
+
+same
+
+as
+
+Display APIs 283
+
+8
+
+Comm APIs
+
+8.1 PTZ
+8.1.1 [Config] PTZ Config
+⚫
+
+Get PTZ config
+Table 8-1
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=getConfig&name=Ptz
+
+Method
+
+GET
+
+Description
+
+Get PTZ config.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=getConfig&name=Ptz
+
+Success
+Return
+
+table.Ptz[port].Address=8
+table.Ptz[port].Attribute[0]=115200
+table.Ptz[port].Attribute[1]=8
+table.Ptz[port].Attribute[2]=Even
+table.Ptz[port].Attribute[3]=1
+table.Ptz[port].Homing[0]=0
+table.Ptz[port].Homing[1]=30
+table.Ptz[port].NumberInMatrixs=0
+table.Ptz[port].ProtocolName=NONE
+
+Comment
+
+Parameters in Response:
+port is PTZ port index, start form 0.
+
+⚫
+
+Set PTZ config
+Table 8-2
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&<paramName>=<paramV
+alue>[&<paramName>=<paramValue>…]
+
+Method
+
+GET
+
+Description
+
+Set PTZ config.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&Ptz[0].Address=192.
+168.0.1&Ptz[0].Attribute[0]=9600
+
+Success
+Return
+
+OK
+
+Comment
+
+port in below ParamName is PTZ port index, start form 0.
+
+Appendix:
+ParamName
+
+ParamValue type
+
+Ptz[port].Address
+
+integer
+
+Description
+Range is [0—255].
+Device address, if there are more than one device
+
+Comm APIs 284
+
+ParamName
+
+ParamValue type
+
+Ptz[port].Attribute[0]
+
+integer
+
+The baud rate. Range is {1200, 2400, 4800, 9600,
+19200, 38400, 57600, 115200}.
+
+Ptz[port].Attribute[1]
+
+integer
+
+Range is {4, 5, 6, 7, 8}.
+Data bit.
+
+Ptz[port].Attribute[2]
+
+string
+
+Range is {Even, Mark, None, Odd, Space}.
+Parity verification mode.
+
+Ptz[port].Attribute[3]
+
+float
+
+Ptz[port].Homing[0]
+
+Description
+connected to this port, distinguish them by this
+address.
+
+Range is {1, 1.5, 2}.
+Stop bit.
+Range is {-1,0—255}
+-1: homing is not enabled.
+
+integer
+
+[0—255]: preset point number
+Range is [0—65535].
+No operation timeout, unit is seconds.
+After no operation timeout, PTZ go to preset point
+set in Ptz[port].Homing[0].
+
+Ptz[port].Homing[1]
+
+integer
+
+Ptz[port].ProtocolName
+
+string
+
+Ptz[port].ControlDelayTime
+
+integer
+
+PTZ control delay time, unit: second
+
+Ptz[port].ControlPriority
+
+string
+
+PTZ control priority,the range is "RS485", "Net".
+default : "Net"
+
+PTZ protocol name depends on PTZ capability.
+Refer to GetProtocolList to get the protocol list.
+
+8.1.2 Get PTZ Protocol List
+Table 8-3
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=getProtocolList[&channel=<ChannelNo>]
+
+Method
+Description
+
+GET
+Get the protocol list that PTZ can support. Unsupported now.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=getProtocolList&channel=1
+
+Success
+Return
+
+info.RS[0]=Pelco
+info.RS[1]=DH-SD1
+info.Coaxial[0]=HD-CVI
+info.Coaxial[1]=HD-CVI2.0
+
+Comment
+
+Response contains all support PTZ protocols of the server.
+ChannelNo: integer, video channel index which starts from 1.
+
+8.1.3 Get PTZ Capability of Current Protocol
+Table 8-4
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=getCurrentProtocolCaps[&channel=<ChannelNo>]
+
+Method
+
+GET
+
+Description
+
+Get PTZ channel protocol capabilities.
+
+Comm APIs 285
+
+Example
+
+Success
+Return
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=getCurrentProtocolCaps&channel=1
+caps.AlarmLen=0
+caps.AuxMax=8
+caps.AuxMin=1
+caps.CamAddrMax=255
+caps.CamAddrMin=1
+caps.Flip=false
+caps.Focus=false
+caps.Interval=200
+caps.Iris=false
+caps.Menu=false
+caps.MonAddrMax=255
+caps.MonAddrMin=0
+caps.Name=DH-SD1
+caps.Pan=false
+caps.PanSpeedMax=255
+caps.PanSpeedMin=1
+caps.PatternMax=5
+caps.PatternMin=1
+caps.PresetMax=80
+caps.PresetMin=1
+caps.Tile=false
+caps.TileSpeedMax=255
+caps.TileSpeedMin=1
+caps.TourMax=7
+caps.TourMin=0
+caps.Type=1
+caps.Zoom=false
+caps.PtzMotionRange.HorizontalAngle[0]=0
+caps.PtzMotionRange.HorizontalAngle[1]=360
+caps.PtzMotionRange.VerticalAngle[0]=-20
+caps.PtzMotionRange.VerticalAngle[1]=90
+caps.ZoomMax=30
+caps.ZoomMin=1
+
+Comment
+
+Parameters in URL:
+ChannelNo: PTZ channel index which starts from 1.
+
+Appendix:
+Field in response
+
+Description
+
+AlarmLen
+
+Alarm length in protocol.
+
+AuxMax
+AuxMin
+CamAddrMax
+CamAddrMin
+
+Maximum/Minimum number for auxiliary functions.
+Maximum/Minimum channel address.
+
+Flip
+
+True or false, support picture flip or not.
+
+Focus
+
+True or false, support focus or not.
+
+Iris
+
+True or false, support Iris adjusts or not.
+
+Comm APIs 286
+
+Field in response
+Menu
+MonAddrMax
+
+Description
+True or false, support internal menu of the PTZ or not.
+Maximum/Minimum monitor address.
+
+MonAddrMin
+Name
+
+Name of the operation protocol.
+
+Pan
+
+True or false, support pan or not.
+
+PanSpeedMax
+
+Maximum/Minimum pan speed.
+
+PanSpeedMin
+PatternMax
+
+Maximum/Minimum pattern path number.
+
+PatternMin
+PresetMax
+
+Maximum/Minimum preset point number.
+
+PresetMin
+Tile
+
+True or false, support tilt or not.
+
+Zoom
+
+True or false, support zoom or not.
+
+TileSpeedMax
+
+Maximum/Minimum tile speed.
+
+TileSpeedMin
+TourMax
+
+Maximum/Minimum tour path number.
+
+TourMin
+Type
+
+Type of PTZ protocol.
+
+PtzMotionRange.HorizontalAngle
+
+Horizontal angle range，[0] for minimum angle，[1] for maximum
+angle
+it only when Pan was true
+
+PtzMotionRange.VerticalAngle
+
+Vertical angle range，[0] for minimum angle，[1] for maximum angle
+it only when Tile was true
+
+ZoomMax
+
+Maximum/Minimum Zoom.
+it only when Zoom was true
+
+ZoomMin
+
+8.1.4 Get PTZ Status
+Table 8-5
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=getStatus[&channel=<ChannelNo>]
+
+Method
+
+GET
+
+Description
+
+Get PTZ status.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=getStatus&channel=1
+
+Success
+Return
+
+status.UTC=6538920
+status.MoveStatus=Idle
+status.ZoomStatus=Idle
+status.PresetID=10
+status.Position=120,12,2
+
+Comment
+
+ChannelNo: integer, video channel index which starts from 1.
+
+8.1.5 PTZ Control
+⚫
+
+PTZ Basic Movement
+
+Start moving the PTZ.
+
+Comm APIs 287
+
+Request URL
+
+http://<server>/cgi-bin/ptz.cgi?action=start
+GET
+
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+code
+char[16] R
+See the following table for the operation
+codes for PTZ movement.
+arg1
+int
+O
+Operation parameter 1: See the following
+table for the meaning of the operation code.
+arg2
+int
+O
+Operation parameter 2: See the following
+table for the meaning of the operation code.
+arg3
+
+int
+
+O
+
+Operation parameter 3: See the following
+table for the meaning of the operation code.
+
+Example
+1
+"Up"
+0
+1
+0
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Up&arg1=0&arg2=1&arg3=0
+
+Response Params ( OK in body )
+Response Example
+OK
+Stop moving the PTZ.
+http://<server>/cgi-bin/ptz.cgi?action=stop
+Request URL
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+code
+char[16] R
+See the following table for the operation
+
+Example
+1
+"Up"
+
+codes for PTZ movement.
+Operation Parameter 1, reserved.
+Operation Parameter 2, reserved.
+Operation Parameter 3, reserved.
+
+arg1
+int
+O
+0
+arg2
+int
+O
+0
+arg3
+int
+O
+0
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=stop&code=Up&channel=1&arg1=0&arg2=0&arg3=0
+
+Response Params ( OK in body )
+Response Example
+OK
+Appendix: Operation codes for PTZ movement and the parameters.
+Code
+
+Code description
+
+arg1
+
+arg2
+
+arg3
+
+Up
+
+Move up
+
+0
+
+Vertical
+motion
+range: [1–8]
+
+speed;
+
+Down
+
+Move down
+
+0
+
+Vertical
+motion
+range: [1–8]
+
+speed;
+
+Left
+
+Move left
+
+0
+
+Horizontal motion
+range: [1–8]
+
+speed;
+
+0
+0
+0
+
+Comm APIs 288
+
+Code
+
+Code description
+
+arg1
+
+Right
+
+Move right
+
+0
+
+LeftUp
+
+Move in an upper-left
+direction
+
+Vertical motion speed;
+range: [1–8]
+
+Horizontal motion speed;
+range: [1–8]
+
+0
+
+RightUp
+
+Move in an upper-right
+direction
+
+Vertical motion speed;
+range: [1–8]
+
+Horizontal motion speed;
+range: [1–8]
+
+0
+
+LeftDown
+
+Move in an lower-left
+direction
+
+Vertical motion speed;
+range: [1–8]
+
+Horizontal motion speed;
+range: [1–8]
+
+0
+
+Move in an lower-right
+
+Vertical motion speed;
+
+Horizontal motion speed;
+
+direction
+
+range: [1–8]
+
+range: [1–8]
+
+ZoomWide
+
+Zoom in
+
+0
+
+0
+
+0
+
+ZoomTele
+
+Zoom out
+
+0
+
+0
+
+0
+
+FocusNear
+
+Focus (near-field)
+
+0
+
+0
+
+0
+
+FocusFar
+
+Focus (far-field)
+
+0
+
+0
+
+0
+
+IrisLarge
+
+Increase the aperture
+
+0
+
+0
+
+0
+
+IrisSmall
+
+Decrease the aperture
+
+0
+
+0
+
+0
+
+RightDown
+
+⚫
+
+arg2
+Horizontal motion
+range: [1–8]
+
+arg3
+speed;
+
+0
+
+0
+
+PTZ Continuously Moving
+
+Start continuously moving the PTZ
+http://<server>/cgi-bin/ptz.cgi?action=start&code=Continuously
+Request URL
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+code
+char[16] R
+PTZ continuously moving operation code,
+arg1
+
+int
+
+O
+
+arg2
+
+int
+
+O
+
+arg3
+arg4
+
+int
+int
+
+O
+O
+
+must be "Continuously".
+See the table below for the motion direction
+and step length.
+See the table below for the motion direction
+and step length.
+Zooming speed; range: [-100–100]
+
+Example
+1
+"Continuously"
+5
+5
+
+5
+Overtime period; unit: s (maximum 3600 s). 60
+If the PTZ does not receive the stop
+command before the preset overtime
+period, it will stop moving automatically.
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&code=Continuously&channel=1&arg1=5&arg2=5&arg3
+=5&arg4=60
+
+Response Params ( OK in body )
+Response Example
+OK
+Appendix: Direction of the continuous movement of the PTZ and the step length parameters.
+Move description
+
+arg1
+
+arg2
+
+Comm APIs 289
+
+Move description
+Continuously move left
+
+arg1
+< -4
+
+arg2
+0
+
+Continuously move right
+
+>4
+
+0
+
+Continuously move up
+
+0
+
+>4
+
+Continuously move down
+
+0
+
+< -4
+
+Continuously move in an
+upper-left direction
+
+< -4
+
+>4
+
+Continuously move in an
+upper-right direction
+
+>4
+
+>4
+
+Continuously move in a
+lower-left direction
+
+< -4
+
+< -4
+
+Continuously move in a
+lower-right direction
+
+>4
+
+＜ -4
+
+Stop continuously moving the PTZ
+Request URL
+Method
+
+http://<server>/cgi-bin/ptz.cgi?action=stop&code=Continuously
+GET
+
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+
+Example
+1
+
+code
+
+char[16]
+
+R
+
+"Continuously"
+
+arg1
+
+int
+
+O
+
+PTZ continuously moving operation code,
+must be "Continuously".
+Operation Parameter 1, reserved.
+
+0
+
+arg2
+int
+O
+Operation Parameter 2, reserved.
+0
+arg3
+int
+O
+Operation Parameter 3, reserved.
+0
+arg4
+int
+O
+Operation Parameter 4, reserved.
+0
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=stop&code=Continuously&channel=1&arg1=0&arg2=0&arg3
+=0&arg4=0
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+3D Positioning
+
+The PTZ moves to the specified position [startX, startY], [endX, endY] on the screen through 3D
+positioning .
+Request URL
+http://<server>/cgi-bin/ptzBase.cgi?action=moveDirectly
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+startPoint
+int[2]
+R
+The start point of the target matrix [startX,
+
+Example
+1
+[7253,2275]
+
+startY]; relative coordinate; the value of X
+and Y is normalized to a number between 0
+and 8192.
+The end point of the target matrix [startX,
+
+[7893,3034]
+
+endpoint
+
+int[2]
+
+R
+
+Comm APIs 290
+
+startY]; relative coordinate; the value of X
+and Y is normalized to a number between 0
+and 8192.
+Request Example
+http://192.168.1.108/cgi-bin/ptzBase.cgi?action=moveDirectly&channel=1&startPoint[0]=7253&startPoin
+t[1]=2275&endPoint[0]=7893&endPoint[1]=3034
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+Relative PTZ Movement
+
+Relative PTZ movement
+Request URL
+Method
+
+http://<server>/cgi-bin/ptz.cgi?action=moveRelatively
+GET
+
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+
+Example
+1
+
+arg1
+arg2
+
+double
+double
+
+O
+O
+
+Relative horizontal motion; normalized to [-1, 1]
+Relative vertical motion; normalized to [-1, 1]
+
+0.1
+0.1
+
+arg3
+
+double
+
+O
+
+Relative zoom; normalized to [-1, 1]
+
+0.5
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=moveRelatively&channel=1&arg1=0.1&arg2=0.1&arg3=0.5
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+Accurate PTZ Positioning
+
+Accurate PTZ positioning; the actual parameter range depends on the device. For capability details,
+execute the command mentioned in "8.1.3 Get PTZ Capability of Current Protocol".
+http://<server>/cgi-bin/ptz.cgi?action=moveAbsolutely
+Request URL
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+arg1
+double
+O
+Relative horizontal position; normalized to [-1, 1];
+
+Example
+1
+-0.8
+
+arg1 < 0: Angle = 180.0 × arg1 + 360.0, and the
+actual range is [180.0, 360.0];
+arg1 ≥ 0: Angle = 180.0 × arg1, and the actual
+range is [0, 180.0]
+arg2
+
+double
+
+O
+
+arg3
+double
+Request Example
+
+O
+
+Absolute vertical position; normalized to [-1, 1];
+Angle = -180.0 × arg2 , the actual range is
+[-180.0, 180.0]
+Absolute zoom; normalized to [-1, 1]
+
+0.3
+
+0.5
+
+Comm APIs 291
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=moveAbsolutely&channel=1&arg1=-0.8&arg2=0.3&arg3=0.5
+
+Response Params ( OK in body )
+Response Example
+OK
+
+8.1.6 Preset
+⚫
+
+Getting Preset Information
+
+Get the preset information
+Request URL
+
+http://<server>/cgi-bin/ptz.cgi?action=getPresets
+GET
+
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+O
+Video channel number, starting from 1; the
+
+Example
+1
+
+default value is 1.
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=getPresets&channel=1
+
+Response Params ( key=value format in body )
+Name
+Type
+R/O
+Description
+presets
+object[]
+R
+List of preset information
++Index
+int
+R
+The preset number; starting from 1
++Name
+
+char[256]
+
+O
+
++Type
+
+int
+
+O
+
++PresetFunction
+
++Position
+
+char[16]
+
+int[3]
+
+O
+
+O
+
+Example
+1
+
+The preset name
+Preset type
+
+"preset1"
+0
+
+0: Normal preset
+1: Preset configured with smart rules
+2: Special preset
+Function List of the Special Presets
+"VideoBlack": Day/Night Mode (B/W)
+"VideoColor": Day/Night Mode (Color)
+"VideoBrightness": Day/Night Mode (Auto)
+The coordinate of the preset and zoom; three
+integers
+The first parameter is the horizontal coordinate;
+range: [0,3599], referring to 0° to 359.9° (the
+number of degree is expanded by 10 times).
+The second parameter is the vertical coordinate;
+range: [-1800,1800], referring to -180° to 180°
+(the number of degree is expanded by 10
+times).
+The third parameter is the expansion parameter;
+range: [0,128], referring to the zoom range.
+
+"VideoBlack
+"
+
+[900, -900,
+5]
+
+Response Example
+presets[0].Index=1
+
+Comm APIs 292
+
+presets[0].Name=Preset 1
+presets[0].Type=0
+presets[0].PresetFunction="VideoBlack"
+presets[0].Position=[900, -900, 5]
+…
+⚫
+
+Moving to the Preset
+
+Move to the preset.
+Request URL
+
+http://<server>/cgi-bin/ptz.cgi?action=start&code=GotoPreset
+
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+arg1
+int
+O
+Ignore
+
+Example
+1
+0
+
+arg2
+arg3
+
+1
+0
+
+int
+int
+
+R
+O
+
+The preset number; starting from 1
+Ignore
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&code=GotoPreset&channel=1&arg1=0&arg2=1&arg3=
+0
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+Configuring Preset
+
+Configure a preset.
+http://<server>/cgi-bin/ptz.cgi?action=start&code=SetPreset
+Request URL
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+arg1
+int
+O
+Ignore
+arg2
+int
+R
+The preset number; starting from 1
+arg3
+int
+O
+Ignore
+
+Example
+1
+0
+1
+0
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&code=SetPreset&channel=1&arg1=0&arg2=2&arg3=0
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+Configuring Preset Name
+
+Configure a name for the preset.
+http://<server>/cgi-bin/ptz.cgi?action=SetPreset
+Request URL
+GET
+Method
+Request Params ( key=value format in URL )
+
+Comm APIs 293
+
+Name
+channel
+arg1
+arg2
+
+Type
+int
+int
+char[256]
+
+R/O
+R
+R
+R
+
+Description
+The PTZ channel index; starting from 1
+The preset number; starting from 1
+The preset name
+
+Example
+1
+2
+"preset2"
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=SetPreset&channel=1&arg1=2&arg2=preset2
+
+Response Params ( OK in body )
+Response Example
+OK
+⚫
+
+Deleting Preset
+
+Delete a preset.
+Request URL
+Method
+
+http://<server>/cgi-bin/ptz.cgi?action=start&code=ClearPreset
+GET
+
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+R
+The PTZ channel index; starting from 1
+arg1
+int
+O
+Ignore
+arg2
+int
+R
+The preset number; starting from 1
+arg3
+int
+O
+Ignore
+
+Example
+1
+0
+2
+0
+
+Request Example
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&code=ClearPreset&channel=1&arg1=0&arg2=2&arg3
+=0
+
+Response Params ( OK in body )
+Response Example
+OK
+
+8.1.7 Tour
+⚫
+
+Start the tour
+Table 8-6
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=StartTour&arg1=<index
+>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Start the tour.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=StartTour&arg1=1&arg
+2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour route
+
+Comm APIs 294
+
+⚫
+
+Stop the tour
+Table 8-7
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=StopTour&arg1=<index
+>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Stop the tour.
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=StopTour&arg1=1&arg
+2=0&arg3=0
+
+Example
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour route
+
+⚫
+
+Add tour group
+Table 8-8
+http://<server>/cgi-bin/ptz.cgi?action=setTour&channel=<ch>&arg1=<index>&arg2=<nam
+
+Syntax
+
+e>
+
+Method
+
+GET
+
+Descriptio
+n
+
+Add tour group, including set the tour route and name. Frequently used with add tour
+preset.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=setTour&channel=1&arg1=1&arg2=1
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour route
+arg2 is tour name
+
+⚫
+
+Delete tour group
+Table 8-9
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=ClearTour&arg1=<inde
+x>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Delete the tour group with specified number.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=ClearTour&arg1=1&ar
+g2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour group
+
+⚫
+
+Add tour preset
+
+Comm APIs 295
+
+Table 8-10
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=AddTour&arg1=<index
+1>&arg2=<index2>&arg3=0
+
+Method
+
+GET
+
+Description
+
+Add preset to tour group.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=AddTour&arg1=1&arg
+2=2&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour route
+arg2 is the number of preset
+
+⚫
+
+Delete tour preset
+Table 8-11
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=DelTour&arg1=<index1
+>&arg2=<index2>&arg3=0
+
+Method
+
+GET
+
+Description
+
+Delete the specified preset from a particular tour group.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=DelTour&arg1=1&arg2
+=2&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the number of tour route
+arg2 is the number of preset
+
+8.1.8 Scan
+⚫
+
+Set left boundary
+Table 8-12
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=SetLeftLimit&arg1=<ind
+ex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Set left boundary.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=SetLeftLimit&arg1=1&
+arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+Comm APIs 296
+
+arg1 is the scan number
+⚫
+
+Set right boundary
+Table 8-13
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=SetRightLimit&arg1=<in
+dex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Set right boundary.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=SetRightLimit&arg1=1
+&arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is the scan number
+
+⚫
+
+Start scan
+Table 8-14
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=AutoScanOn&arg1=<in
+dex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Start scanning.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=AutoScanOn&arg1=1
+&arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1—n].
+arg1 is scan number
+
+⚫
+
+Stop scan
+Table 8-15
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=AutoScanOff&arg1=<in
+dex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Stop scanning.
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=AutoScanOff&arg1=1
+&arg2=0&arg3=0
+
+Example
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is scan number
+
+Comm APIs 297
+
+8.1.9 Pattern
+⚫
+
+Start pattern record
+Table 8-16
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=SetPatternBegin&arg1=
+<index>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Start pattern record.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=SetPatternBegin&arg1
+=1&arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is pattern number
+
+⚫
+
+Stop pattern record
+Table 8-17
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=SetPatternEnd&arg1=<i
+ndex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Stop pattern record.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=SetPatternEnd&arg1=
+1&arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is pattern number
+
+⚫
+
+Start pattern
+Table 8-18
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=StartPattern&arg1=<ind
+ex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Start pattern.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=StartPattern&arg1=1&
+arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is pattern number
+
+Comm APIs 298
+
+⚫
+
+Stop pattern
+Table 8-19
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=StopPattern&arg1=<ind
+ex>&arg2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Stop pattern.
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=StopPattern&arg1=1&
+arg2=0&arg3=0
+
+Example
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+arg1 is pattern number
+
+8.1.10 Pan
+⚫
+
+Start pan
+Table 8-20
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=AutoPanOn&arg1=0&ar
+g2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Start pan.
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=AutoPanOn&arg1=0&
+arg2=0&arg3=0
+
+Example
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+⚫
+
+Stop pan
+Table 8-21
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=AutoPanOff&arg1=0&ar
+g2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Stop pan.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=AutoPanOff&arg1=0&
+arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+Comm APIs 299
+
+8.1.11 [Config] PTZ Auto Movement
+⚫
+
+Get PTZ auto movement configuration
+Table 8-22
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=getConfig&name=PtzAutoMovement
+
+Method
+
+GET
+
+Description
+
+Get PTZ auto movement configuration.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=getConfig&name=PtzAutoMove
+ment
+table.PtzAutoMovement[port][Task].Enable = true
+table.PtzAutoMovement[port][Task].TimeSection[week][section] = 0 00:00:00-23:59:59
+…
+table.PtzAutoMovement[port][Task].Function = None
+table.PtzAutoMovement[port][Task].ScanId = 0
+table.PtzAutoMovement[port][Task].PresetId = 0
+table.PtzAutoMovement[port][Task].PatternId = 0
+table.PtzAutoMovement[port][Task].TourId = 0
+table.PtzAutoMovement[port][Task].AutoHoming.Time = 30
+table.PtzAutoMovement[port][Task].SnapshotEnable = false
+table.PtzAutoMovement[port][Task].SnapshotDelayTime = 30
+
+Success
+Return
+
+Comment
+
+⚫
+
+Parameters in Response:
+port is PTZ port index, start from 0.
+Task is the number of task, start from 0.
+week: from 1 to 7.
+section: time section, from 0 to 5.
+
+Set PTZ auto movement
+Table 8-23
+
+Syntax
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&<paramName>=<paramV
+alue>[&<paramName>=<paramValue>…]
+
+Method
+
+GET
+
+Description
+
+Set PTZ auto movement.
+
+Example
+
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&PtzAutoMovement[0]
+[0].Function=Preset&PtzAutoMovement[0][0].PresetId=1
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+In table below,
+head=PtzAutoMovement[port][task]
+port is PTZ port index, start from 0.
+task is the number of task, start from 0.
+week: from 1 to 7.
+section: time section, from 0 to 5.
+
+Comm APIs 300
+
+Appendix:
+ParamName
+
+ParamValue type
+
+Description
+
+head.Enable
+
+bool
+
+Enable/Disable PtzAutoMovement
+
+head.TimeSection
+
+timeSchedule
+
+timeSchedule[week][section]=1 10:00:00-11:00:00
+…
+
+head.Function
+
+string
+
+Range is {Scan, Preset, Pattern, Tour}.
+
+head.ScanId
+
+integer
+
+Scan Id, start from 1
+
+head.PresetId
+
+integer
+
+Preset Id, start from 1
+
+head.PatternId
+
+integer
+
+Pattern Id, start from 1
+
+head.TourId
+
+integer
+
+Tour Id, start from 1
+
+head.AutoHoming.Time
+
+integer
+
+Recover time, unit is second.
+
+head.SnapshotEnable
+
+bool
+
+Enable/Disable Snap, when "Fuction" is "Preset".
+
+head.SnapshotDelayTime
+
+integer
+
+Delay time of snap, when "Fuction" is "Preset".
+
+8.1.12 PTZ Restart
+Table 8-24
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=Restart&arg1=0&arg
+2=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+PTZ restart.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Restart&arg1=0&ar
+g2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+8.1.13 PTZ Reset
+Table 8-25
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=Reset&arg1=0&arg2
+=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+PTZ reset.
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Reset&arg1=0&arg
+2=0&arg3=0
+
+Example
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+Comm APIs 301
+
+8.1.14 OSD Menu
+⚫
+
+Enter the menu
+Table 8-26
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=Menu&arg1=0&arg2
+=0&arg3=0
+
+Method
+
+GET
+
+Description
+
+Enter the menu.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Menu&arg1=0&arg
+2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+⚫
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+Exit the menu
+Table 8-27
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=Exit&arg1=0&arg2=0&
+arg3=0
+
+Method
+
+GET
+
+Description
+
+Exit the menu.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Exit&arg1=0&arg2=0
+&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+⚫
+
+Confirm
+Table 8-28
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=Enter&arg1=0&arg2=0
+&arg3=0
+
+Method
+Description
+
+GET
+Confirm the menu.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=Enter&arg1=0&arg2=
+0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+
+⚫
+
+Start the basic operation of menu
+Table 8-29
+
+Comm APIs 302
+
+Syntax
+
+http://<server>/cgi-bin/ptz.cgi?action=start&channel=<ch>&code=<code>&arg1=<arg1
+>&arg2=<arg2>&arg3=<arg3>
+
+Method
+Description
+
+GET
+Start the basic operation of menu.
+
+Example
+
+http://192.168.1.108/cgi-bin/ptz.cgi?action=start&channel=1&code=MenuUp&arg1=0&
+arg2=0&arg3=0
+
+Success
+Return
+
+OK
+
+Comment
+
+Parameters in URL:
+ch is PTZ channel index which starts from 1. Range is [1 — n].
+code is PTZ operation, and arg1, arg2, arg3 are arguments of operation.
+code and argN values are listed in table below.
+
+Appendix:
+Code
+
+Code description
+
+arg1
+
+arg2
+
+arg3
+
+MenuUp
+
+MenuUp
+
+0
+
+0
+
+0
+
+MenuDown
+
+MenuDown
+
+0
+
+0
+
+0
+
+MenuLeft
+
+MenuLeft
+
+0
+
+0
+
+0
+
+MenuRight
+
+MenuRight
+
+0
+
+0
+
+0
+
+8.1.15 [Config] Set up electronic PTZ
+Request URL
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&<paramName>=<
+paramValue>[&<paramName>=<paramValue>…]
+
+Method
+
+GET
+
+Request Params (key=value format at URL )
+Name
+
+Type
+
+R/O
+
+Description
+
+Example
+
+EptzLink[channel].Ena
+ble
+
+bool
+
+O
+
+Whether to enable the
+electronic PTZ function in
+this channel.
+Channel indicates the
+channel number
+
+true
+
+EptzLink[channel].Dis
+playMode
+
+char[32]
+
+O
+
+Display mode, used to
+select the number of
+channels to track;
+Options are:
+"original" - normal mode;
+"Oneplusone" - 1 + 1 mode;
+"Oneplusthree" - 1 + 3
+mode;
+"Oneplusfive" - 1 + 5 mode
+
+"Original"
+
+EptzLink[channel].Tra
+ckEnable
+
+bool
+
+O
+
+Whether to start linkage
+tracking;
+True - on,
+False close
+
+true
+
+EptzLink[channel].Tra
+
+char[32]
+
+O
+
+Tracking duration options,
+
+"Manual"
+
+Comm APIs 303
+
+ckTime
+
+including full-time tracking
+and manual configuration of
+tracking duration.
+"Fulltimetrack": full-time
+tracking, indicating that the
+tracking duration lasts until
+the target disappears;
+"Manual": customize the
+tracking duration. If this
+mode is selected, it will be
+tracked according to the
+user configured tracking
+duration.
+
+EptzLink[channel].Ma
+nualTrackTime[i]
+
+uint16
+
+O
+
+If tracktime is in "manual"
+mode, it will be tracked
+according to the tracking
+duration range configured
+by the user in this field
+([minimum tracking time,
+maximum tracking time]),
+which can be configured for
+5-300 seconds. The
+maximum duration of
+tracking is the
+disappearance time of the
+target. For example, if the
+tracking duration is set to 50
+seconds and the target
+disappears in 30 seconds,
+the tracking will stop). ‘I’
+represents the index of the
+array, and ‘i’ can take 0 or 1
+
+5
+
+EptzLink[channel].Tra
+ckRect[i][j][k]
+
+uint32
+
+O
+
+The coordinate information
+of the tracking target frame
+represents one of the
+points. The first dimension
+represents the display
+mode, the second
+dimension represents the
+number of frames, and the
+third dimension is the
+bounding box of the
+rectangular frame, which is
+normalized to the 8192
+coordinate system.
+
+2047
+
+Example
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&EptzLink[0].Enable=true
+
+Comm APIs 304
+
+8.1.16 Get View Range Status
+Request URL
+http://<server>/cgi-bin/api/ptz/getViewRangeStatus
+POST
+Method
+Request Params ( JSON format in body )
+Name
+Type
+R/O
+Description
+Channel
+int32
+R
+Video channel number,
+starting from 0
+
+Example
+0
+
+Request Example
+{
+"Channel": 0
+}
+Response Params ( JSON format in body )
+Name
+Type
+R/O
+Description
+status
+object
+view range status
+否
+Visual distance in
+否
++Distance
+double
+meters
+否
++AngelH
+double
+Horizontal viewing angle
+Unit: degrees
+否
++AzimuthH
+double
+Horizontal azimuth
+angle
+(The angle between the
+central axis of the
+included angle projected
+by the visual field on the
+horizontal plane and the
+reference axis on the
+horizontal plane)
+Expressed in radians,
+normalized to - 1~1.
+Turn counterclockwise
+for positive direction
++AngelV
+double
+否
+Vertical viewing angle
+Unit: degrees
++AzimuthV
+double
+否
+Vertical azimuth angle
+(The angle between the
+central axis of the
+included angle projected
+by the visual field on the
+vertical plane and the
+angle of the reference
+axis on the vertical
+plane)
+
+Example
+20.0
+30.5
+0.5
+
+30.5
+0.5
+
+Comm APIs 305
+
+Expressed in radians,
+normalized to - 1~1.
++InclinationH
+
+double
+
+否
+
+Horizontal inclination
+angle
+(The included angle
+between the equipment
+horizontal datum plane
+and the horizontal
+plane)
+Unit: degrees
+Normalized to - 1~1.
+
+0.5
+
+Response Example
+{
+"status" : {
+"Distance" : 20.0,
+"AngelH" : 30.5,
+"AzimuthH" : 0.5,
+"AngelV" : 30.5,
+"AzimuthV" : 0.5,
+"InclinationH" : 0.5
+}
+}
+
+8.2 Wiper
+8.2.1 Move Continuously
+Make the wiper continuously move until you call the stopMove function to stop it.
+Request URL
+
+http://<server>/cgi-bin/rainBrush.cgi?action=moveContinuously
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+channel
+
+Type
+int
+
+R/O
+O
+
+Description
+Video channel number, starting from 1; the default
+value is 1
+Interval for the motion of the wiper; unit: second
+
+Example
+1
+
+interval
+int
+R
+5
+Request Example
+http://192.168.1.108/cgi-bin/rainBrush.cgi?action=moveContinuously&channel=1&interval=5
+
+Response Params ( OK in body )
+Response Example
+OK
+
+Comm APIs 306
+
+8.2.2 Stop Move
+Stop the motion of the wiper.
+Request URL
+
+http://<server>/cgi-bin/rainBrush.cgi?action=stopMove
+
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+O
+Video channel number, starting from 1; the
+default value is 1
+Request Example
+http://192.168.1.108/cgi-bin/rainBrush.cgi?action=stopMove&channel=1
+
+Example
+1
+
+Response Params ( OK in body )
+Response Example
+OK
+
+8.2.3 Move Once
+Control the wiper to move once.
+Request URL
+
+http://<server>/cgi-bin/rainBrush.cgi?action=moveOnce
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+O
+video channel index which starts from 1,
+default 1 if not specified.
+
+Example
+1
+
+Request Example
+http://192.168.1.108/cgi-bin/rainBrush.cgi?action=moveOnce&channel=1
+
+Response Params ( OK in body )
+Response Example
+OK
+
+8.3 Illuminator
+The following commands are applicable to non-intelligent illuminators.
+
+8.3.1 [Config] Visible-light Illuminator
+Template
+
+Method
+Parameter
+Format
+Parameter
+
+http://<server>/cgi-bin/configManager.cgi?action=setConfig&SignLight[0].onCycle=3
+0
+GET
+key=value format in URL
+Type
+
+Required
+
+Description
+
+Example
+
+Comm APIs 307
+
+onCycle
+
+Uint32
+
+Yes
+
+Range[0-100]
+
+30
+
+Example
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&SignLight[0].onCycle=30
+
+Parameter
+Format
+Parameter
+Example
+OK
+
+OK at body
+Type
+
+Required
+
+Description
+
+Example
+
+8.4 Flashlight
+8.4.1 [Config] Flashlight Config
+Configuration parameters of the flashing light (Not recommended).
+Config Data Params
+Name
+Type
+FlashLight
+
+object
+
++Enable
++Brightness
+
+bool
+int
+
++TimeSection
+
+char[7][24][
+32]
+
+R/O
+R
+
+Description
+Configuration parameters of the flashing
+light
+
+Example
+
+R
+R
+R
+
+Whether to enable the flashing light
+Brightness; range [0, 100]
+Two-dimensional array in strings.
+The first dimension of the array is the day of
+the week; range: [0-6] (Sunday–Saturday).
+The second dimension is the period index.
+One day is divided into multiple periods, and
+the range is [0–23].
+Each period is set as a string in the format of
+mask hh: mm: ss-hh: mm: ss
+Mask: Value range: [0, 1]
+hh: Hour; range: [0–24]
+mm: Minute; range: [0–59]
+ss: Second; range: [0–59]
+Mask value:
+0: Disable the parameter in the period
+1: Enable the parameter in the period
+For example:
+TimeSection[1][0]=1 12:00:00—18:00:00
+Meaning the flashing light works from
+12:00:00 through 18:00:00 on Monday.
+
+true
+50
+[ [ "1 00:00:0023:59:59", "0 0
+0:00:00-23:59:
+59","0 00:00:0
+0-23:59:59", "
+0 00:00:00-23:
+59:59", … ] ]
+
+For getting and setting the configurations, see 4.2.1 Get and Set Configure”.
+Get Config Request Example
+http://192.168.1.108/cgi-bin/configManager.cgi?action=getConfig&name=FlashLight
+Get Config Response Example
+
+Comm APIs 308
+
+table.FlashLight.Enable=true
+table.FlashLight.Brightness=50
+table.FlashLight.TimeSection[0][0]=1 00:00:00-23:59:59
+table.FlashLight.TimeSection[0][1]=0 00:00:00-23:59:59
+…
+table.FlashLight.TimeSection[6][5]=0 00:00:00-23:59:59
+…
+
+Set Config Request Example
+http://192.168.1.108/cgi-bin/configManager.cgi?action=setConfig&FlashLight.Enable=true&FlashLight.B
+rightness=50&FlashLight.TimeSection[1][0]=1%2012:00:00-18:00:00
+Set Config Response Example
+OK
+
+8.5 Coaxial Control IO
+8.5.1 Control White Light or Speaker
+Send commands for controlling the white light and speaker
+Request URL
+
+http://<server>/cgi-bin/coaxialControlIO.cgi?action=control
+
+Method
+GET
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+O
+It is the video channel number for the white
+light, and the audio output channel for the
+speaker. The default value is 0.
+info
+object[]
+R
+Operation details
++Type
+int
+R
+Operation type
+1: White light
+2: Speaker
++IO
+int
+R
+Switch
+
++TriggerMode
+
+int
+
+R
+
+1: On
+2: Off
+Trigger Mode
+1: Linked trigger
+2: Manual trigger
+
+Example
+1
+
+1
+
+1
+
+2
+
+Request Example
+http://192.168.1.108/cgi-bin/coaxialControlIO.cgi?action=control&channel=1&info[0].Type=1&info[0].IO=
+1&info[0].TriggerMode=2
+
+Response Params ( OK in body )
+Response Example
+OK
+
+Comm APIs 309
+
+8.5.2 Get White Light and Speaker Status
+Get the status of the white light and the speaker.
+Request URL
+
+http://<server>/cgi-bin/coaxialControlIO.cgi?action=getstatus
+
+GET
+Method
+Request Params ( key=value format in URL )
+Name
+Type
+R/O
+Description
+channel
+int
+O
+The video channel number which starts
+from 1, and the default value is 1.
+Request Example
+http://192.168.1.108/cgi-bin/coaxialControlIO.cgi?action=getstatus&channel=1
+
+Example
+1
+
+Response Params ( key=value format in body )
+Name
+status
++whitelight
+
+Type
+object
+char[4]
+
++speaker
+char[4]
+Response Example
+status.whitelight=on
+status.speaker=on
+
+R/O
+R
+R
+
+Description
+Return status information
+White light status, "on" or "off"
+
+Example
+
+R
+
+Speaker status, "on" or "off"
+
+"on"
+
+"on"
+
+8.6 Pir Alarm
+8.6.1 [Config] Pir Parameter
+⚫
+
+Get pir parameter
+Table 8-30
+
+Syntax
+
+http://<server>/cgi-bin/pirAlarm.cgi?action=getPirParam&[channel=<channelNo>]
+
+Method
+
+GET
+
+Description
+
+Get pir parameter.
+
+Example
+
+http://192.168.1.108/cgi-bin/pirAlarm.cgi?action=getPirParam&channel=1
+
+Success
+Return
+
+head.Enable=true
+head.PirLink.LightingLink.Enable=true
+head.PirLink.LightingLink.LightLinkType=Filcker
+head.PirLink.LightingLink.FilckerIntevalTime=5
+head.PirLink.LightingLink.LightDuration=10
+head.PirLink.LightingLink.WhiteLightTimeSection=TimeSection
+head.PirLink.TimeSection[weekday][0]=1 00:00:00-24:00:00
+head.PirLink.TimeSection[weekday][1]=0 02:00:00-24:00:00
+head.PirLink.TimeSection[weekday][2]=0 03:00:00-24:00:00
+head.PirLink.TimeSection[weekday][3]=0 04:00:00-24:00:00
+head.PirLink.TimeSection[weekday][4]=0 05:00:00-24:00:00
+head.PirLink.TimeSection[weekday][5]=0 06:00:00-24:00:00
+
+Comm APIs 310
+
+head.RecordEnable=true
+head.RecordChannels=[0, 1, 2]
+head.RecordLatch=10
+head.AlarmOutEnable=true
+head.AlarmOutChannels=[1, 4]
+head.AlarmOutLatch=10
+head.SnapshotEnable=true
+head.SnapshotChannels=[2, 4]
+head.MailEnable=true
+head.AlarmBellEnable=true
+head.AlarmBellLatch=10
+head.Dejitter=0
+head.LogEnable=true
+head.DetectWindow[0].Level=3
+head.DetectWindow[0].Id=0
+head.DetectWindow[0].Name=Region0
+head.DetectWindow[0].Sensitive=58
+head.DetectWindow[0].Threshold=4
+head.DetectWindow[0].Region[0]=3932160
+head.DetectWindow[0].Region[1]=3932160
+…
+…
+head. DetectWindow [1]…
+
+Comment
+
+⚫
+
+if a device has one or more pir, PirParam is a array
+channel : video channel index
+weekday : range is [0-6] (Sunday - Saturday)
+head=configEx[channelNo]
+
+set pir parameter
+Table 8-31
+
+Syntax
+
+http://<server>/cgi-bin/pirAlarm.cgi?action=setPirParam&[channel=<channelNo>]&<pa
+ramName>=<paramValue>...&<paramName>=<paramValue>
+
+Method
+Description
+
+GET
+Set pir parameter.
+
+Example
+
+http://192.168.1.108/cgi-bin/pirAlarm.cgi?action=setPirParam&channel=1&configEx[1].
+Enable=true&configEx[1].PirLink.LightingLink.Enable=true&...
+
+Success
+Return
+
+OK
+
+Comment
+
+channel : video channel index
+head=configEx[channelNo]
+
+Appendix:
+ParamName
+
+ParamValue type
+
+head.Enable
+
+bool
+
+Description
+Enable/Disable motion detect feature in a
+channel.
+
+Comm APIs 311
+
+
