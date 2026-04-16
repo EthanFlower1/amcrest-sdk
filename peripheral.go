@@ -364,3 +364,187 @@ func (s *PeripheralService) QueryAdFiles(ctx context.Context) (string, error) {
 func (s *PeripheralService) DiscoverDevices(ctx context.Context) (string, error) {
 	return s.client.cgiGet(ctx, "deviceDiscovery.cgi", "attach", nil)
 }
+
+// ---------------------------------------------------------------------------
+// Section 15.6.11-15.6.19 - Radar configuration
+// ---------------------------------------------------------------------------
+
+// GetMapParaConfig retrieves the MapPara configuration.
+func (s *PeripheralService) GetMapParaConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "MapPara")
+}
+
+// SetMapParaConfig updates the MapPara configuration.
+func (s *PeripheralService) SetMapParaConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarAnalyseRuleConfig retrieves the RadarAnalyseRule configuration.
+func (s *PeripheralService) GetRadarAnalyseRuleConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarAnalyseRule")
+}
+
+// SetRadarAnalyseRuleConfig updates the RadarAnalyseRule configuration.
+func (s *PeripheralService) SetRadarAnalyseRuleConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarCalibrationConfig retrieves the RadarCalibration configuration.
+func (s *PeripheralService) GetRadarCalibrationConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarCalibration")
+}
+
+// SetRadarCalibrationConfig updates the RadarCalibration configuration.
+func (s *PeripheralService) SetRadarCalibrationConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarGuardLineConfig retrieves the RadarGuardLine configuration.
+func (s *PeripheralService) GetRadarGuardLineConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarGuardLine")
+}
+
+// SetRadarGuardLineConfig updates the RadarGuardLine configuration.
+func (s *PeripheralService) SetRadarGuardLineConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarLinkConfig retrieves the RadarLink configuration.
+func (s *PeripheralService) GetRadarLinkConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarLink")
+}
+
+// SetRadarLinkConfig updates the RadarLink configuration.
+func (s *PeripheralService) SetRadarLinkConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarLinkDeviceConfig retrieves the RadarLinkDevice configuration.
+func (s *PeripheralService) GetRadarLinkDeviceConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarLinkDevice")
+}
+
+// SetRadarLinkDeviceConfig updates the RadarLinkDevice configuration.
+func (s *PeripheralService) SetRadarLinkDeviceConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarParaConfig retrieves the RadarPara configuration.
+func (s *PeripheralService) GetRadarParaConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarPara")
+}
+
+// SetRadarParaConfig updates the RadarPara configuration.
+func (s *PeripheralService) SetRadarParaConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRadarTrackGlobalConfig retrieves the RadarTrackGlobal configuration.
+func (s *PeripheralService) GetRadarTrackGlobalConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RadarTrackGlobal")
+}
+
+// SetRadarTrackGlobalConfig updates the RadarTrackGlobal configuration.
+func (s *PeripheralService) SetRadarTrackGlobalConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetRemoteSDLinkConfig retrieves the RemoteSDLink configuration.
+func (s *PeripheralService) GetRemoteSDLinkConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "RemoteSDLink")
+}
+
+// SetRemoteSDLinkConfig updates the RemoteSDLink configuration.
+func (s *PeripheralService) SetRemoteSDLinkConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// ---------------------------------------------------------------------------
+// Section 15.6 - Radar operations
+// ---------------------------------------------------------------------------
+
+// SubscribeRadarAlarm subscribes to radar alarm point information on the given channel.
+// radarAdaptor.cgi?action=attachAlarmPointInfo&channel=N
+func (s *PeripheralService) SubscribeRadarAlarm(ctx context.Context, channel int) (string, error) {
+	params := url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+	}
+	return s.client.cgiGet(ctx, "radarAdaptor.cgi", "attachAlarmPointInfo", params)
+}
+
+// ManualLocate triggers a manual radar locate operation.
+// radarAdaptor.cgi?action=manualLocate&...
+func (s *PeripheralService) ManualLocate(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "radarAdaptor.cgi", "manualLocate", v)
+}
+
+// AddRadarLinkSD adds a radar-linked SD device.
+// radarAdaptor.cgi?action=addRadarLinkSD&...
+func (s *PeripheralService) AddRadarLinkSD(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "radarAdaptor.cgi", "addRadarLinkSD", v)
+}
+
+// DelRadarLinkSD removes a radar-linked SD device.
+// radarAdaptor.cgi?action=delRadarLinkSD&...
+func (s *PeripheralService) DelRadarLinkSD(ctx context.Context, params map[string]string) error {
+	v := url.Values{}
+	for k, val := range params {
+		v.Set(k, val)
+	}
+	return s.client.cgiAction(ctx, "radarAdaptor.cgi", "delRadarLinkSD", v)
+}
+
+// GetRadarLinkSDState retrieves the radar-linked SD device state.
+// radarAdaptor.cgi?action=getLinkSDState
+func (s *PeripheralService) GetRadarLinkSDState(ctx context.Context) (string, error) {
+	return s.client.cgiGet(ctx, "radarAdaptor.cgi", "getLinkSDState", nil)
+}
+
+// ---------------------------------------------------------------------------
+// Section 15.2 - Open Platform
+// ---------------------------------------------------------------------------
+
+// StartApp starts an installed application.
+// installManager.cgi?action=start&name=AppName
+func (s *PeripheralService) StartApp(ctx context.Context, appName string) error {
+	params := url.Values{
+		"name": {appName},
+	}
+	return s.client.cgiAction(ctx, "installManager.cgi", "start", params)
+}
+
+// StopApp stops a running application.
+// installManager.cgi?action=stop&name=AppName
+func (s *PeripheralService) StopApp(ctx context.Context, appName string) error {
+	params := url.Values{
+		"name": {appName},
+	}
+	return s.client.cgiAction(ctx, "installManager.cgi", "stop", params)
+}
+
+// UninstallApp uninstalls an application.
+// dhop.cgi?action=uninstall&name=AppName
+func (s *PeripheralService) UninstallApp(ctx context.Context, appName string) error {
+	params := url.Values{
+		"name": {appName},
+	}
+	return s.client.cgiAction(ctx, "dhop.cgi", "uninstall", params)
+}
+
+// ---------------------------------------------------------------------------
+// Section 15.4.8 - Scene Correction
+// ---------------------------------------------------------------------------
+
+// CorrectScene performs scene correction via the lens function API.
+// POST /cgi-bin/api/LensFunc/correctScene
+func (s *PeripheralService) CorrectScene(ctx context.Context, body interface{}) error {
+	return s.client.postJSON(ctx, "/cgi-bin/api/LensFunc/correctScene", body, nil)
+}
