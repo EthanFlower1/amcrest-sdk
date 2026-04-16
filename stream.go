@@ -86,38 +86,92 @@ func (es *EventStream) Close() error {
 }
 
 func parseEvent(lines []string) *Event {
-	kv := make(map[string]string)
 	var rawLines []string
+	var jsonLines []string
+	inJSON := false
+	braceDepth := 0
+
+	// Separate the header line (Code=...;action=...;index=...;data={)
+	// from any subsequent JSON data lines.
+	var headerLine string
 
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "Content-") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "Content-") {
 			continue
 		}
 		rawLines = append(rawLines, line)
-		idx := strings.Index(line, "=")
-		if idx < 0 {
+
+		if headerLine == "" && strings.HasPrefix(trimmed, "Code=") {
+			headerLine = trimmed
+			// Check if this line opens a JSON block
+			if strings.HasSuffix(trimmed, "{") || strings.Contains(trimmed, "data={") {
+				inJSON = true
+				braceDepth = 1
+			}
 			continue
 		}
-		key := strings.TrimSpace(line[:idx])
-		val := strings.TrimSpace(line[idx+1:])
-		kv[key] = val
+
+		if inJSON {
+			jsonLines = append(jsonLines, line)
+			braceDepth += strings.Count(trimmed, "{") - strings.Count(trimmed, "}")
+			if braceDepth <= 0 {
+				inJSON = false
+			}
+		}
 	}
 
-	code := kv["Code"]
-	if code == "" {
+	if headerLine == "" {
+		// Check for Heartbeat
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "Heartbeat" {
+				return &Event{Code: "Heartbeat", Raw: "Heartbeat"}
+			}
+		}
 		return nil
 	}
 
+	// Parse the header: Code=XXX;action=YYY;index=ZZZ;data={
 	evt := &Event{
-		Code:   code,
-		Action: kv["action"],
-		Data:   kv,
-		Raw:    strings.Join(rawLines, "\n"),
+		Data: make(map[string]string),
+		Raw:  strings.Join(rawLines, "\n"),
 	}
 
-	if idxStr, ok := kv["index"]; ok {
-		fmt.Sscanf(idxStr, "%d", &evt.Index)
+	// Strip "data={" or "data=" suffix from header before parsing fields
+	header := headerLine
+	dataIdx := strings.Index(header, ";data=")
+	if dataIdx >= 0 {
+		header = header[:dataIdx]
+	}
+
+	// Parse semicolon-separated key=value pairs
+	parts := strings.Split(header, ";")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		eqIdx := strings.Index(part, "=")
+		if eqIdx < 0 {
+			continue
+		}
+		key := strings.TrimSpace(part[:eqIdx])
+		val := strings.TrimSpace(part[eqIdx+1:])
+		switch key {
+		case "Code":
+			evt.Code = val
+		case "action":
+			evt.Action = val
+		case "index":
+			fmt.Sscanf(val, "%d", &evt.Index)
+		}
+		evt.Data[key] = val
+	}
+
+	// Attach the JSON data if present
+	if len(jsonLines) > 0 {
+		evt.Data["data"] = strings.Join(jsonLines, "\n")
+	}
+
+	if evt.Code == "" {
+		return nil
 	}
 
 	return evt
