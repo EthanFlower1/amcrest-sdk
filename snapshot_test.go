@@ -55,4 +55,23 @@ func TestSnapshot(t *testing.T) {
 			t.Logf("GetWithType returned %d bytes", len(data))
 		}
 	})
+
+	t.Run("GetWithType_Frontend", func(t *testing.T) {
+		if !hasSnapWithType {
+			t.Skip("camera does not support snapshot GetWithType")
+		}
+		// Type 0 = frontend snapshot (real-time from sensor).
+		data, err := c.Snapshot.GetWithType(ctx, 1, 0)
+		if err != nil {
+			t.Fatalf("GetWithType(type=0): %v", err)
+		}
+		if len(data) == 0 {
+			t.Fatal("expected non-empty snapshot data for frontend snapshot")
+		}
+		if len(data) >= 2 && data[0] == 0xFF && data[1] == 0xD8 {
+			t.Logf("Frontend snapshot: JPEG %d bytes", len(data))
+		} else {
+			t.Logf("Frontend snapshot: %d bytes (non-JPEG)", len(data))
+		}
+	})
 }

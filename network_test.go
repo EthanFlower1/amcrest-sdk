@@ -76,6 +76,42 @@ func TestNetwork(t *testing.T) {
 		}
 	})
 
+	t.Run("SetEmailConfig", func(t *testing.T) {
+		if !hasEmail {
+			t.Skip("camera does not support Email config")
+		}
+		original, err := c.Network.GetEmailConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetEmailConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original Email.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Network.SetEmailConfig(ctx, map[string]string{
+				"Email.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Network.SetEmailConfig(ctx, map[string]string{
+			"Email.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetEmailConfig")
+
+		updated, err := c.Network.GetEmailConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetEmailConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected Email.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified Email.Enable changed to %q", newEnable)
+	})
+
 	t.Run("GetWLanConfig", func(t *testing.T) {
 		if !hasWLan {
 			t.Skip("camera does not support WLan config")
@@ -131,6 +167,39 @@ func TestNetwork(t *testing.T) {
 		}
 	})
 
+	t.Run("SetNTPConfig", func(t *testing.T) {
+		original, err := c.Network.GetNTPConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetNTPConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original NTP.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Network.SetNTPConfig(ctx, map[string]string{
+				"NTP.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Network.SetNTPConfig(ctx, map[string]string{
+			"NTP.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetNTPConfig")
+
+		updated, err := c.Network.GetNTPConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetNTPConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected NTP.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified NTP.Enable changed to %q", newEnable)
+	})
+
 	t.Run("GetRTSPConfig", func(t *testing.T) {
 		cfg, err := c.Network.GetRTSPConfig(ctx)
 		if err != nil {
@@ -144,6 +213,40 @@ func TestNetwork(t *testing.T) {
 		}
 	})
 
+	t.Run("SetRTSPConfig", func(t *testing.T) {
+		original, err := c.Network.GetRTSPConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetRTSPConfig (save): %v", err)
+		}
+		origPort := original["Port"]
+		t.Logf("Original RTSP.Port: %s", origPort)
+
+		defer func() {
+			_ = c.Network.SetRTSPConfig(ctx, map[string]string{
+				"RTSP.Port": origPort,
+			})
+		}()
+
+		// Change to a different valid port.
+		newPort := "554"
+		if origPort == "554" {
+			newPort = "555"
+		}
+		err = c.Network.SetRTSPConfig(ctx, map[string]string{
+			"RTSP.Port": newPort,
+		})
+		skipOnSetError(t, err, "SetRTSPConfig")
+
+		updated, err := c.Network.GetRTSPConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetRTSPConfig (verify): %v", err)
+		}
+		if updated["Port"] != newPort {
+			t.Fatalf("expected RTSP.Port=%q, got %q", newPort, updated["Port"])
+		}
+		t.Logf("Verified RTSP.Port changed to %q", newPort)
+	})
+
 	t.Run("GetAlarmServerConfig", func(t *testing.T) {
 		cfg, err := c.Network.GetAlarmServerConfig(ctx)
 		if err != nil {
@@ -155,6 +258,39 @@ func TestNetwork(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("AlarmServer.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetAlarmServerConfig", func(t *testing.T) {
+		original, err := c.Network.GetAlarmServerConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetAlarmServerConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original AlarmServer.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Network.SetAlarmServerConfig(ctx, map[string]string{
+				"AlarmServer.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Network.SetAlarmServerConfig(ctx, map[string]string{
+			"AlarmServer.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetAlarmServerConfig")
+
+		updated, err := c.Network.GetAlarmServerConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetAlarmServerConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected AlarmServer.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified AlarmServer.Enable changed to %q", newEnable)
 	})
 
 	t.Run("GetSSHDConfig", func(t *testing.T) {
@@ -171,6 +307,42 @@ func TestNetwork(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("SSHD.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetSSHDConfig", func(t *testing.T) {
+		if !hasSSHD {
+			t.Skip("camera does not support SSHD config")
+		}
+		original, err := c.Network.GetSSHDConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetSSHDConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original SSHD.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Network.SetSSHDConfig(ctx, map[string]string{
+				"SSHD.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Network.SetSSHDConfig(ctx, map[string]string{
+			"SSHD.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetSSHDConfig")
+
+		updated, err := c.Network.GetSSHDConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetSSHDConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected SSHD.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified SSHD.Enable changed to %q", newEnable)
 	})
 
 	t.Run("ScanWLanDevices", func(t *testing.T) {

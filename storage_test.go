@@ -107,4 +107,55 @@ func TestStorage(t *testing.T) {
 			t.Logf("HealthAlarm.%s = %s", k, v)
 		}
 	})
+
+	t.Run("SetStorageHealthAlarm", func(t *testing.T) {
+		original, err := c.Storage.GetStorageHealthAlarm(ctx)
+		if err != nil {
+			t.Fatalf("GetStorageHealthAlarm (save): %v", err)
+		}
+
+		// Find LowerLimit key.
+		limitKey := ""
+		origVal := ""
+		for k, v := range original {
+			if contains(k, "LowerLimit") {
+				limitKey = k
+				origVal = v
+				break
+			}
+		}
+		if limitKey == "" {
+			t.Skip("no LowerLimit key found in StorageHealthAlarm config")
+		}
+		t.Logf("Original %s = %s", limitKey, origVal)
+
+		setKey := limitKey
+		if len(setKey) > 6 && setKey[:6] == "table." {
+			setKey = setKey[6:]
+		}
+
+		defer func() {
+			_ = c.Storage.SetStorageHealthAlarm(ctx, map[string]string{
+				setKey: origVal,
+			})
+		}()
+
+		newVal := "10"
+		if origVal == "10" {
+			newVal = "15"
+		}
+		err = c.Storage.SetStorageHealthAlarm(ctx, map[string]string{
+			setKey: newVal,
+		})
+		skipOnSetError(t, err, "SetStorageHealthAlarm")
+
+		updated, err := c.Storage.GetStorageHealthAlarm(ctx)
+		if err != nil {
+			t.Fatalf("GetStorageHealthAlarm (verify): %v", err)
+		}
+		if updated[limitKey] != newVal {
+			t.Fatalf("expected %s=%q, got %q", limitKey, newVal, updated[limitKey])
+		}
+		t.Logf("Verified LowerLimit changed to %q", newVal)
+	})
 }

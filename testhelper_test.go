@@ -3,6 +3,7 @@ package amcrest
 import (
 	"bufio"
 	"context"
+	"errors"
 	"os"
 	"strconv"
 	"strings"
@@ -408,6 +409,22 @@ func requireCapability(t *testing.T, supported bool, name string) {
 	if !supported {
 		t.Skipf("camera does not support %s", name)
 	}
+}
+
+// skipOnSetError skips the test if the error indicates the camera does not
+// support this setter (HTTP 501 Not Implemented or 400 Bad Request).
+// Returns false if there was no error; fatals if the error is unexpected.
+func skipOnSetError(t *testing.T, err error, label string) bool {
+	t.Helper()
+	if err == nil {
+		return false
+	}
+	var apiErr *APIError
+	if errors.As(err, &apiErr) && (apiErr.StatusCode == 501 || apiErr.StatusCode == 400) {
+		t.Skipf("%s not supported on this device (HTTP %d)", label, apiErr.StatusCode)
+	}
+	t.Fatalf("%s: %v", label, err)
+	return true // unreachable
 }
 
 func capsInt(caps map[string]string, key string) int {

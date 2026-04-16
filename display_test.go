@@ -52,6 +52,60 @@ func TestDisplay(t *testing.T) {
 		}
 	})
 
+	t.Run("SetMonitorTour", func(t *testing.T) {
+		if !hasMonitorTour {
+			t.Skip("camera does not support MonitorTour config")
+		}
+		original, err := c.Display.GetMonitorTour(ctx)
+		if err != nil {
+			t.Fatalf("GetMonitorTour (save): %v", err)
+		}
+
+		// Find an Enable key to toggle.
+		enableKey := ""
+		origVal := ""
+		for k, v := range original {
+			if contains(k, "Enable") {
+				enableKey = k
+				origVal = v
+				break
+			}
+		}
+		if enableKey == "" {
+			t.Skip("no Enable key found in MonitorTour config")
+		}
+		t.Logf("Original %s = %s", enableKey, origVal)
+
+		setKey := enableKey
+		if len(setKey) > 6 && setKey[:6] == "table." {
+			setKey = setKey[6:]
+		}
+
+		defer func() {
+			_ = c.Display.SetMonitorTour(ctx, map[string]string{
+				setKey: origVal,
+			})
+		}()
+
+		newVal := "true"
+		if origVal == "true" {
+			newVal = "false"
+		}
+		err = c.Display.SetMonitorTour(ctx, map[string]string{
+			setKey: newVal,
+		})
+		skipOnSetError(t, err, "SetMonitorTour")
+
+		updated, err := c.Display.GetMonitorTour(ctx)
+		if err != nil {
+			t.Fatalf("GetMonitorTour (verify): %v", err)
+		}
+		if updated[enableKey] != newVal {
+			t.Fatalf("expected %s=%q, got %q", enableKey, newVal, updated[enableKey])
+		}
+		t.Logf("Verified MonitorTour Enable changed to %q", newVal)
+	})
+
 	t.Run("GetMonitorCollection", func(t *testing.T) {
 		if !hasMonitorCollect {
 			t.Skip("camera does not support MonitorCollection config")

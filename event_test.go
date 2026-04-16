@@ -95,6 +95,42 @@ func TestEvent(t *testing.T) {
 		}
 	})
 
+	t.Run("SetBlindDetectConfig", func(t *testing.T) {
+		if !supportsEvent("VideoBlind") {
+			t.Skip("camera does not support VideoBlind event")
+		}
+		original, err := c.Event.GetBlindDetectConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetBlindDetectConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original BlindDetect.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Event.SetBlindDetectConfig(ctx, map[string]string{
+				"BlindDetect.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Event.SetBlindDetectConfig(ctx, map[string]string{
+			"BlindDetect.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetBlindDetectConfig")
+
+		updated, err := c.Event.GetBlindDetectConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetBlindDetectConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected BlindDetect.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified BlindDetect.Enable changed to %q", newEnable)
+	})
+
 	t.Run("GetLossDetectConfig", func(t *testing.T) {
 		if !hasLossDetect {
 			t.Skip("camera does not support LossDetect config")
@@ -106,6 +142,42 @@ func TestEvent(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("LossDetect.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetLossDetectConfig", func(t *testing.T) {
+		if !hasLossDetect {
+			t.Skip("camera does not support LossDetect config")
+		}
+		original, err := c.Event.GetLossDetectConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetLossDetectConfig (save): %v", err)
+		}
+		origEnable := original["Enable"]
+		t.Logf("Original LossDetect.Enable: %s", origEnable)
+
+		defer func() {
+			_ = c.Event.SetLossDetectConfig(ctx, map[string]string{
+				"LossDetect.Enable": origEnable,
+			})
+		}()
+
+		newEnable := "true"
+		if origEnable == "true" {
+			newEnable = "false"
+		}
+		err = c.Event.SetLossDetectConfig(ctx, map[string]string{
+			"LossDetect.Enable": newEnable,
+		})
+		skipOnSetError(t, err, "SetLossDetectConfig")
+
+		updated, err := c.Event.GetLossDetectConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetLossDetectConfig (verify): %v", err)
+		}
+		if updated["Enable"] != newEnable {
+			t.Fatalf("expected LossDetect.Enable=%q, got %q", newEnable, updated["Enable"])
+		}
+		t.Logf("Verified LossDetect.Enable changed to %q", newEnable)
 	})
 
 	t.Run("GetLoginFailureAlarmConfig", func(t *testing.T) {

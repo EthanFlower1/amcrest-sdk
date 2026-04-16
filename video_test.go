@@ -2,7 +2,6 @@ package amcrest
 
 import (
 	"context"
-	"errors"
 	"testing"
 )
 
@@ -105,15 +104,13 @@ func TestVideo(t *testing.T) {
 		}
 		t.Logf("Original ChannelTitle[0].Name: %s", origName)
 
+		defer func() {
+			_ = c.Video.SetChannelTitle(ctx, 0, origName)
+		}()
+
 		testName := "SDK-Test-Title"
-		if err := c.Video.SetChannelTitle(ctx, 0, testName); err != nil {
-			var apiErr *APIError
-			if errors.As(err, &apiErr) && (apiErr.StatusCode == 501 || apiErr.StatusCode == 400) {
-				t.Skip("SetChannelTitle not supported on this device")
-			}
-			t.Fatalf("SetChannelTitle: %v", err)
-		}
-		t.Logf("Set ChannelTitle to: %s", testName)
+		err = c.Video.SetChannelTitle(ctx, 0, testName)
+		skipOnSetError(t, err, "SetChannelTitle")
 
 		updatedCfg, err := c.Video.GetChannelTitle(ctx)
 		if err != nil {
@@ -122,11 +119,7 @@ func TestVideo(t *testing.T) {
 		if updatedCfg["table.ChannelTitle[0].Name"] != testName {
 			t.Fatalf("expected %q, got %q", testName, updatedCfg["table.ChannelTitle[0].Name"])
 		}
-
-		if err := c.Video.SetChannelTitle(ctx, 0, origName); err != nil {
-			t.Fatalf("SetChannelTitle (restore): %v", err)
-		}
-		t.Logf("Restored ChannelTitle to: %s", origName)
+		t.Logf("Verified ChannelTitle changed to %q", testName)
 	})
 
 	t.Run("GetVideoWidget", func(t *testing.T) {
@@ -153,6 +146,61 @@ func TestVideo(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("SmartEncode.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetSmartEncodeConfig", func(t *testing.T) {
+		if !hasSmartEncode {
+			t.Skip("camera does not support SmartEncode config")
+		}
+		original, err := c.Video.GetSmartEncodeConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetSmartEncodeConfig (save): %v", err)
+		}
+
+		// Find the Enable key.
+		enableKey := ""
+		origVal := ""
+		for k, v := range original {
+			if contains(k, "Enable") {
+				enableKey = k
+				origVal = v
+				break
+			}
+		}
+		if enableKey == "" {
+			t.Skip("no Enable key found in SmartEncode config")
+		}
+		t.Logf("Original %s = %s", enableKey, origVal)
+
+		// Strip the "table." prefix for the set key.
+		setKey := enableKey
+		if len(setKey) > 6 && setKey[:6] == "table." {
+			setKey = setKey[6:]
+		}
+
+		defer func() {
+			_ = c.Video.SetSmartEncodeConfig(ctx, map[string]string{
+				setKey: origVal,
+			})
+		}()
+
+		newVal := "true"
+		if origVal == "true" {
+			newVal = "false"
+		}
+		err = c.Video.SetSmartEncodeConfig(ctx, map[string]string{
+			setKey: newVal,
+		})
+		skipOnSetError(t, err, "SetSmartEncodeConfig")
+
+		updated, err := c.Video.GetSmartEncodeConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetSmartEncodeConfig (verify): %v", err)
+		}
+		if updated[enableKey] != newVal {
+			t.Fatalf("expected %s=%q, got %q", enableKey, newVal, updated[enableKey])
+		}
+		t.Logf("Verified %s changed to %q", enableKey, newVal)
 	})
 
 	t.Run("GetVideoInputCaps", func(t *testing.T) {

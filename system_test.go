@@ -108,7 +108,7 @@ func TestSystem(t *testing.T) {
 
 		newTime := time.Now().Add(1 * time.Second).Format("2006-1-2 15:04:05")
 		if err := c.System.SetCurrentTime(ctx, newTime); err != nil {
-			t.Fatalf("SetCurrentTime: %v", err)
+			skipOnSetError(t, err, "SetCurrentTime")
 		}
 		t.Logf("Set time to: %s", newTime)
 
@@ -141,6 +141,36 @@ func TestSystem(t *testing.T) {
 		}
 	})
 
+	t.Run("SetGeneralConfig", func(t *testing.T) {
+		original, err := c.System.GetGeneralConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetGeneralConfig (save): %v", err)
+		}
+		origName := original["MachineName"]
+		t.Logf("Original MachineName: %s", origName)
+
+		defer func() {
+			_ = c.System.SetGeneralConfig(ctx, map[string]string{
+				"General.MachineName": origName,
+			})
+		}()
+
+		testName := "SDK-Test-Name"
+		err = c.System.SetGeneralConfig(ctx, map[string]string{
+			"General.MachineName": testName,
+		})
+		skipOnSetError(t, err, "SetGeneralConfig")
+
+		updated, err := c.System.GetGeneralConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetGeneralConfig (verify): %v", err)
+		}
+		if updated["MachineName"] != testName {
+			t.Fatalf("expected MachineName=%q, got %q", testName, updated["MachineName"])
+		}
+		t.Logf("Verified MachineName changed to %q", testName)
+	})
+
 	t.Run("GetAutoMaintainConfig", func(t *testing.T) {
 		cfg, err := c.System.GetAutoMaintainConfig(ctx)
 		if err != nil {
@@ -152,6 +182,39 @@ func TestSystem(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("AutoMaintain.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetAutoMaintainConfig", func(t *testing.T) {
+		original, err := c.System.GetAutoMaintainConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetAutoMaintainConfig (save): %v", err)
+		}
+		origDay := original["AutoRebootDay"]
+		t.Logf("Original AutoRebootDay: %s", origDay)
+
+		defer func() {
+			_ = c.System.SetAutoMaintainConfig(ctx, map[string]string{
+				"AutoMaintain.AutoRebootDay": origDay,
+			})
+		}()
+
+		newDay := "Tuesday"
+		if origDay == "Tuesday" {
+			newDay = "Wednesday"
+		}
+		err = c.System.SetAutoMaintainConfig(ctx, map[string]string{
+			"AutoMaintain.AutoRebootDay": newDay,
+		})
+		skipOnSetError(t, err, "SetAutoMaintainConfig")
+
+		updated, err := c.System.GetAutoMaintainConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetAutoMaintainConfig (verify): %v", err)
+		}
+		if updated["AutoRebootDay"] != newDay {
+			t.Fatalf("expected AutoRebootDay=%q, got %q", newDay, updated["AutoRebootDay"])
+		}
+		t.Logf("Verified AutoRebootDay changed to %q", newDay)
 	})
 
 	t.Run("GetLocalesConfig", func(t *testing.T) {
@@ -167,6 +230,39 @@ func TestSystem(t *testing.T) {
 		}
 	})
 
+	t.Run("SetLocalesConfig", func(t *testing.T) {
+		original, err := c.System.GetLocalesConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetLocalesConfig (save): %v", err)
+		}
+		origDST := original["DSTEnable"]
+		t.Logf("Original DSTEnable: %s", origDST)
+
+		defer func() {
+			_ = c.System.SetLocalesConfig(ctx, map[string]string{
+				"Locales.DSTEnable": origDST,
+			})
+		}()
+
+		newDST := "true"
+		if origDST == "true" {
+			newDST = "false"
+		}
+		err = c.System.SetLocalesConfig(ctx, map[string]string{
+			"Locales.DSTEnable": newDST,
+		})
+		skipOnSetError(t, err, "SetLocalesConfig")
+
+		updated, err := c.System.GetLocalesConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetLocalesConfig (verify): %v", err)
+		}
+		if updated["DSTEnable"] != newDST {
+			t.Fatalf("expected DSTEnable=%q, got %q", newDST, updated["DSTEnable"])
+		}
+		t.Logf("Verified DSTEnable changed to %q", newDST)
+	})
+
 	t.Run("GetHolidayConfig", func(t *testing.T) {
 		cfg, err := c.System.GetHolidayConfig(ctx)
 		if err != nil {
@@ -176,6 +272,51 @@ func TestSystem(t *testing.T) {
 		for k, v := range cfg {
 			t.Logf("Holiday.%s = %s", k, v)
 		}
+	})
+
+	t.Run("SetHolidayConfig", func(t *testing.T) {
+		original, err := c.System.GetHolidayConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetHolidayConfig (save): %v", err)
+		}
+
+		// Find the first MonthMask key to toggle.
+		var targetKey, origVal string
+		for k, v := range original {
+			if len(k) > 0 && contains(k, "MonthMask") {
+				targetKey = k
+				origVal = v
+				break
+			}
+		}
+		if targetKey == "" {
+			t.Skip("no MonthMask key found in HolidayConfig")
+		}
+		t.Logf("Original %s = %s", targetKey, origVal)
+
+		defer func() {
+			_ = c.System.SetHolidayConfig(ctx, map[string]string{
+				targetKey: origVal,
+			})
+		}()
+
+		newVal := "0"
+		if origVal == "0" {
+			newVal = "1"
+		}
+		err = c.System.SetHolidayConfig(ctx, map[string]string{
+			targetKey: newVal,
+		})
+		skipOnSetError(t, err, "SetHolidayConfig")
+
+		updated, err := c.System.GetHolidayConfig(ctx)
+		if err != nil {
+			t.Fatalf("GetHolidayConfig (verify): %v", err)
+		}
+		if updated[targetKey] != newVal {
+			t.Fatalf("expected %s=%q, got %q", targetKey, newVal, updated[targetKey])
+		}
+		t.Logf("Verified %s changed to %q", targetKey, newVal)
 	})
 
 	t.Run("GetLanguageCaps", func(t *testing.T) {
@@ -234,4 +375,14 @@ func TestSystem(t *testing.T) {
 		}
 		t.Logf("HTTPAPIVersion: %s", v)
 	})
+}
+
+// contains checks if s contains substr (simple helper to avoid importing strings).
+func contains(s, substr string) bool {
+	for i := 0; i+len(substr) <= len(s); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
