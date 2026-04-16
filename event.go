@@ -229,3 +229,172 @@ func (s *EventService) GetBlindDetectConfig(ctx context.Context) (map[string]str
 func (s *EventService) GetLossDetectConfig(ctx context.Context) (map[string]string, error) {
 	return s.client.getConfig(ctx, "LossDetect")
 }
+
+// GetEventHandlerConfig returns the event handler configuration for the given name.
+// The name parameter is e.g. "Alarm[0].EventHandler".
+// CGI: configManager.cgi?action=getConfig&name=<name>
+func (s *EventService) GetEventHandlerConfig(ctx context.Context, name string) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, name)
+}
+
+// SetEventHandlerConfig sets event handler configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetEventHandlerConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetAlarmConfig sets Alarm configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetAlarmConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetAlarmOutConfig sets AlarmOut configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetAlarmOutConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetAlarmInputStates returns the current alarm input states as a bitmask.
+// CGI: alarm.cgi?action=getInState
+func (s *EventService) GetAlarmInputStates(ctx context.Context) (int, error) {
+	body, err := s.client.cgiGet(ctx, "alarm.cgi", "getInState", nil)
+	if err != nil {
+		return 0, err
+	}
+	kv := parseKV(body)
+	val, ok := kv["result"]
+	if !ok {
+		return 0, fmt.Errorf("amcrest: getInState: missing result in response: %s", body)
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(val))
+	if err != nil {
+		return 0, fmt.Errorf("amcrest: getInState: parsing result %q: %w", val, err)
+	}
+	return n, nil
+}
+
+// GetAlarmOutputStates returns the current alarm output states as a bitmask.
+// CGI: alarm.cgi?action=getOutState
+func (s *EventService) GetAlarmOutputStates(ctx context.Context) (int, error) {
+	body, err := s.client.cgiGet(ctx, "alarm.cgi", "getOutState", nil)
+	if err != nil {
+		return 0, err
+	}
+	kv := parseKV(body)
+	val, ok := kv["result"]
+	if !ok {
+		return 0, fmt.Errorf("amcrest: getOutState: missing result in response: %s", body)
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(val))
+	if err != nil {
+		return 0, fmt.Errorf("amcrest: getOutState: parsing result %q: %w", val, err)
+	}
+	return n, nil
+}
+
+// SetBlindDetectConfig sets BlindDetect (video tampering) configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetBlindDetectConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetLossDetectConfig sets LossDetect (video loss) configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetLossDetectConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetLoginFailureAlarmConfig returns the LoginFailureAlarm configuration.
+// CGI: configManager.cgi?action=getConfig&name=LoginFailureAlarm
+func (s *EventService) GetLoginFailureAlarmConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "LoginFailureAlarm")
+}
+
+// SetLoginFailureAlarmConfig sets LoginFailureAlarm configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetLoginFailureAlarmConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetStorageNotExistConfig returns the StorageNotExist configuration.
+// CGI: configManager.cgi?action=getConfig&name=StorageNotExist
+func (s *EventService) GetStorageNotExistConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "StorageNotExist")
+}
+
+// SetStorageNotExistConfig sets StorageNotExist configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetStorageNotExistConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetStorageFailureConfig returns the StorageFailure configuration.
+// CGI: configManager.cgi?action=getConfig&name=StorageFailure
+func (s *EventService) GetStorageFailureConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "StorageFailure")
+}
+
+// SetStorageFailureConfig sets StorageFailure configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetStorageFailureConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetStorageLowSpaceConfig returns the StorageLowSpace configuration.
+// CGI: configManager.cgi?action=getConfig&name=StorageLowSpace
+func (s *EventService) GetStorageLowSpaceConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "StorageLowSpace")
+}
+
+// SetStorageLowSpaceConfig sets StorageLowSpace configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetStorageLowSpaceConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetNetAbortConfig returns the NetAbort configuration.
+// CGI: configManager.cgi?action=getConfig&name=NetAbort
+func (s *EventService) GetNetAbortConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "NetAbort")
+}
+
+// SetNetAbortConfig sets NetAbort configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetNetAbortConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetIPConflictConfig returns the IPConflict configuration.
+// CGI: configManager.cgi?action=getConfig&name=IPConflict
+func (s *EventService) GetIPConflictConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "IPConflict")
+}
+
+// SetIPConflictConfig sets IPConflict configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetIPConflictConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// GetNetAlarmConfig returns the NetAlarm configuration.
+// CGI: configManager.cgi?action=getConfig&name=NetAlarm
+func (s *EventService) GetNetAlarmConfig(ctx context.Context) (map[string]string, error) {
+	return s.client.getRawConfig(ctx, "NetAlarm")
+}
+
+// SetNetAlarmConfig sets NetAlarm configuration values.
+// CGI: configManager.cgi?action=setConfig
+func (s *EventService) SetNetAlarmConfig(ctx context.Context, params map[string]string) error {
+	return s.client.setConfig(ctx, params)
+}
+
+// SetNetAlarmState sets the net alarm state for a given channel.
+// CGI: netAlarm.cgi?action=setState&channel=N&alarm=true/false
+func (s *EventService) SetNetAlarmState(ctx context.Context, channel int, alarm bool) error {
+	params := url.Values{
+		"channel": {fmt.Sprintf("%d", channel)},
+		"alarm":   {fmt.Sprintf("%t", alarm)},
+	}
+	return s.client.cgiAction(ctx, "netAlarm.cgi", "setState", params)
+}
